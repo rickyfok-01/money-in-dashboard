@@ -1,0 +1,28 @@
+node_modules
+dist
+dist-ssr
+.DS_Store
+*.local
+.vite
+
+# legacy data sources — replaced by public/data/*.json
+# keep them out of the repo; regenerate via `npm run data:convert`
+data.js
+pym_data.js
+
+# Raw source data — NOT committed. The repo ships the built data.js instead;
+# regenerate via `python scripts/build_data.py` after any CSV/xlsx change. (STATUS.md §6)
+data/con-bill-*.csv
+data/con-pym-*.csv
+data/constant-scheme-info.xlsx
+data/contribution-allocation.xlsx
+
+# Stray files carried over from a separate Vite project — never commit. (STATUS.md §5.4)
+data/CLAUDE.md
+data/SPEC_*.md
+data/.gitignore
+data/image.png
+scripts/image_to_excel.py
+
+# Merge backup. (STATUS.md §6)
+index-old.html
