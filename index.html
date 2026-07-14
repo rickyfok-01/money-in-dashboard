@@ -629,6 +629,67 @@ table.alloc tfoot td{padding:9px 10px;border-top:2px solid var(--rule);backgroun
   text-align:right;white-space:nowrap}
 table.alloc tfoot td.l{text-align:left}
 @media(max-width:1180px){table.alloc{font-size:.74rem}}
+
+/* ── Global scope/filter bar (snapshot · scheme · trustee · months · mode) ──
+   A single stable surface under the masthead. Controls that don't apply to the
+   current tab are dimmed via .is-nospace / .dim rather than hidden, so the bar's
+   anatomy stays put while the user moves between tabs. */
+.scopebar{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;
+  padding:11px 28px;border-bottom:1px solid var(--rule);background:var(--surface-2);
+  position:relative;z-index:20}
+.scope-grp{display:inline-flex;align-items:center;gap:7px}
+.scope-grp > .lab{font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-2);font-weight:600;white-space:nowrap}
+.scope-sel{padding:5px 10px;border:1px solid var(--hairline);border-radius:8px;
+  background:var(--surface);font:inherit;font-size:.78rem;color:var(--ink);
+  font-family:var(--mono);cursor:pointer;max-width:138px}
+.scope-sel:focus{outline:2px solid var(--accent);outline-offset:1px}
+.scope-sep{width:1px;align-self:stretch;background:var(--hairline);margin:2px 2px}
+.scope-spacer{margin-left:auto}
+/* mode toggle — segmented Current | Compare | Trend (mirrors .alloc-toggle) */
+.scope-mode{display:inline-flex;border:1px solid var(--hairline);border-radius:999px;
+  overflow:hidden;background:var(--surface)}
+.scope-mode button{border:0;background:transparent;padding:6px 15px;font-size:.74rem;
+  font-family:var(--font);color:var(--ink-2);cursor:pointer;letter-spacing:.02em;
+  transition:background .12s,color .12s}
+.scope-mode button:not(.dim):not(.on):hover{background:var(--surface-3);color:var(--ink)}
+.scope-mode button.on{background:var(--accent);color:#fcfcfb;font-weight:600}
+.scope-mode button.dim{opacity:.32;cursor:not-allowed}
+/* dimmed DATA-scope controls (e.g. on Settings/Theme where there is no dataset) */
+.scopebar.is-nospace .scope-data{opacity:.4;pointer-events:none}
+.scope-data{transition:opacity .14s}
+
+/* Multi-select picker (scheme / trustee) — button + dropdown panel */
+.mp{position:relative;display:inline-block}
+.mp-btn{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--hairline);
+  border-radius:8px;background:var(--surface);font:inherit;font-size:.78rem;color:var(--ink);
+  cursor:pointer;max-width:230px;transition:border-color .12s,background .12s}
+.mp-btn:hover{border-color:var(--rule);background:var(--surface-2)}
+.mp-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mp-btn:disabled{cursor:not-allowed}
+.mp-label{font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-caret{font-family:var(--mono);font-size:.7rem;color:var(--muted);transition:transform .14s}
+.mp.open .mp-caret{transform:rotate(180deg)}
+.mp-panel{position:absolute;top:calc(100% + 6px);left:0;min-width:248px;max-width:330px;
+  background:var(--surface);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow-md);
+  padding:9px;z-index:60;display:flex;flex-direction:column;gap:7px}
+.mp-panel[hidden]{display:none}
+.mp-search{width:100%;padding:6px 9px;border:1px solid var(--hairline);border-radius:8px;
+  background:var(--surface-2);font:inherit;font-size:.78rem;color:var(--ink)}
+.mp-search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.mp-tools{display:flex;gap:6px}
+.mp-mini{flex:1;border:1px solid var(--hairline);border-radius:7px;background:var(--surface);
+  font:inherit;font-size:.7rem;color:var(--ink-2);padding:4px 0;cursor:pointer;letter-spacing:.04em}
+.mp-mini:hover{background:var(--surface-3);color:var(--ink)}
+.mp-list{display:flex;flex-direction:column;gap:1px;max-height:264px;overflow:auto;
+  margin:0 -3px;padding:0 3px}
+.mp-row{display:flex;align-items:baseline;gap:8px;padding:5px 7px;border-radius:7px;cursor:pointer}
+.mp-row:hover{background:var(--surface-2)}
+.mp-row input{margin:0;accent-color:var(--accent);flex:none;align-self:center}
+.mp-row .mp-code{font-family:var(--mono);font-size:.78rem;color:var(--ink);font-weight:500}
+.mp-row .mp-name{font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-empty{font-size:.74rem;color:var(--muted);padding:8px 7px}
+@media(max-width:760px){.scopebar{padding:11px 18px}.scope-spacer{flex-basis:100%;height:0;margin:0}}
 </style>
 </head>
 <body data-mode="current">
@@ -694,6 +755,13 @@ table.alloc tfoot td.l{text-align:left}
       </div>
     </header>
 
+    <!-- Global scope/filter bar — the shared controls every tab reads from:
+         snapshot, scheme, trustee, month range, and the Current/Compare/Trend
+         mode toggle. Built once in buildScopeBar(); availability is refreshed
+         per tab in updateScopeBar(). Controls that don't apply to a tab are
+         DIMMED (never removed) so the bar reads as one stable surface. -->
+    <div class="scopebar" id="scopeBar" aria-label="Dashboard scope filters"></div>
+
     <section class="content" id="content"></section>
   </main>
 </div>
@@ -758,6 +826,7 @@ const state = {
   snapA: DATA.snapshots[Math.max(0,DATA.snapshots.length-2)],
   snapB: DATA.latest,
   schemes: [...DATA.schemes],   /* multi-select: which schemes are in scope (all by default) */
+  trustees: [...DATA.trustees], /* multi-select: which trustees are in scope (all by default) */
   at: "",                       /* account type filter (empty = all) */
   mfrom: DATA.months[0],
   mto: DATA.months[DATA.months.length-1],
@@ -769,12 +838,14 @@ const state = {
 };
 
 /* ---- row filtering ---- */
-const schemeOn = r => state.schemes.includes(r.sc);   /* multi-select membership */
-const atOn     = r => !state.at || r.at === state.at;   /* account-type filter */
+const schemeOn   = r => state.schemes.includes(r.sc);   /* multi-select membership */
+const trusteeOn  = r => state.trustees.includes(r.tr);  /* multi-select membership */
+const atOn       = r => !state.at || r.at === state.at;   /* account-type filter */
 function rowsFor(snap, {mfrom=state.mfrom, mto=state.mto}={}){
   return DATA.rows.filter(r =>
     r.s === snap &&
     schemeOn(r) &&
+    trusteeOn(r) &&
     atOn(r) &&
     r.ym >= mfrom && r.ym <= mto);
 }
@@ -3411,9 +3482,11 @@ function renderPendTagging(content){
    Returns a map keyed by "scheme|ym" -> { scheme, trustee, ym, a, b, rec }. */
 function pendSchemeRows(snap, schemeSet){
   const map=new Map();
+  const trusteeSet=new Set(state.trustees);
   DATA.rows.forEach(r=>{
     if(r.s!==snap) return;
     if(!schemeSet.has(r.sc)) return;
+    if(!trusteeSet.has(r.tr)) return;
     if(r.ym<state.mfrom || r.ym>state.mto) return;
     const k=r.sc+"|"+r.ym;
     let m=map.get(k);
@@ -3597,8 +3670,10 @@ function renderPendTaggingTrend(content){
   let totA=0,totB=0;
   const perSchMonth=new Map();  // scheme -> {a:[], b:[]}
   const perSchTot=new Map();
+  const trusteeSet=new Set(state.trustees);
   DATA.rows.forEach(r=>{
     if(!schemeSet.has(r.sc)) return;
+    if(!trusteeSet.has(r.tr)) return;
     if(r.ym<state.mfrom || r.ym>state.mto) return;
     let m=perSchMonth.get(r.sc);
     if(!m){m={a:new Array(periods.length).fill(0),b:new Array(periods.length).fill(0),trustee:r.tr};
@@ -3669,6 +3744,7 @@ function renderPendTaggingTrend(content){
     DATA.rows.forEach(r=>{
       if(r.s!==state.snap)return;
       if(!schemeSet.has(r.sc))return;
+      if(!trusteeSet.has(r.tr))return;
       if(r.ym!==ym)return;
       const k=r.sc+"|"+r.ym;
       let x=m.get(k);
@@ -3871,7 +3947,7 @@ const allocOf=(pay,avail)=>{const p=Number(pay)||0,a=Number(avail)||0;return (p+
 const allocTone=pct=>pct==null?null:(pct>=98?"green":pct>=95?"yellow":"red");
 const money=v=>{if(v==null||isNaN(v))return "—";const a=Math.abs(Number(v)),s=Number(v)<0?"−":"";if(a>=1e9)return s+"$"+(a/1e9).toFixed(2)+"B";if(a>=1e6)return s+"$"+(a/1e6).toFixed(1)+"M";if(a>=1e3)return s+"$"+(a/1e3).toFixed(1)+"K";return s+"$"+Math.round(a);};
 function pymSnap(snap){return (DATA.pym&&DATA.pym.snapshots.includes(snap))?snap:(DATA.pym.snapshots[DATA.pym.snapshots.length-1]||snap);}
-function pymFilter(snap){const ss=new Set(state.schemes);return DATA.pym.rows.filter(r=>r.s===snap&&r.ym>=state.mfrom&&r.ym<=state.mto&&ss.has(r.sc));}
+function pymFilter(snap){const ss=new Set(state.schemes),ts=new Set(state.trustees);return DATA.pym.rows.filter(r=>r.s===snap&&r.ym>=state.mfrom&&r.ym<=state.mto&&ss.has(r.sc)&&ts.has(r.tr));}
 function pymAggregate(snap,by){ /* by: "sc" | "tr" */
   const months=DATA.pym.months.filter(m=>m>=state.mfrom&&m<=state.mto);
   const keyOf=by==="tr"?(r=>r.tr):(r=>r.sc);
@@ -3992,6 +4068,189 @@ function renderMoneyAllocationCompare(content){
 }
 
 /* ============================================================
+   GLOBAL SCOPE BAR — snapshot · scheme · trustee · month range · mode
+   ============================================================
+   The shared filter surface every tab reads through. Built once
+   (buildScopeBar), then refreshed per tab in updateScopeBar(). The mode
+   toggle (Current/Compare/Trend) is enabled per the tab's `modes`; the
+   data-scope controls (snapshot, scheme, trustee, months) are dimmed on
+   tabs that render no dataset (`noScope`). Inapplicable controls DIM — they
+   never disappear — so the bar's anatomy holds steady across tabs. */
+
+/* Multi-select dropdown: search + All/None, checkbox list. Bound to state
+   through getValues/setValues so state stays the single source of truth. */
+class MultiPicker{
+  constructor(opts){
+    this.o=opts; this.open=false;
+    this.root=el("div","mp");
+    this.btn=el("button","mp-btn scope-data"); this.btn.type="button";
+    this.label=el("span","mp-label","");
+    this.caret=el("span","mp-caret","▾");
+    this.btn.append(this.label,this.caret);
+    this.panel=el("div","mp-panel"); this.panel.hidden=true;
+    this.root.append(this.btn,this.panel);
+    this.btn.addEventListener("click",e=>{e.stopPropagation(); this.open?this.close():this.openPanel();});
+    document.addEventListener("click",e=>{if(this.open&&!this.root.contains(e.target))this.close();});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape")this.close();});
+    this._buildPanel();
+    this._label();
+  }
+  values(){return this.o.getValues();}
+  _sort(arr){const items=this.o.items;return arr.sort((a,b)=>items.indexOf(a)-items.indexOf(b));}
+  _buildPanel(){
+    const o=this.o; this.panel.innerHTML="";
+    const search=el("input","mp-search"); search.type="text";
+    search.placeholder="Search "+o.label.toLowerCase()+"…";
+    const tools=el("div","mp-tools");
+    const allBtn=el("button","mp-mini"); allBtn.type="button"; allBtn.textContent="All";
+    const noneBtn=el("button","mp-mini"); noneBtn.type="button"; noneBtn.textContent="None";
+    tools.append(allBtn,noneBtn);
+    const list=el("div","mp-list"); this._rows=new Map();
+    for(const code of o.items){
+      const row=el("label","mp-row"); row.dataset.code=code;
+      const cb=el("input"); cb.type="checkbox";
+      const nm=o.getName(code);
+      row.append(cb, el("span","mp-code",code));
+      if(nm&&nm!==code) row.appendChild(el("span","mp-name",nm));
+      cb.addEventListener("change",()=>{
+        const next=new Set(this.values());
+        if(cb.checked)next.add(code); else next.delete(code);
+        o.setValues(this._sort([...next])); this._label();
+        if(o.onChange)o.onChange();
+      });
+      list.appendChild(row); this._rows.set(code,{row,cb});
+    }
+    search.addEventListener("input",()=>{
+      const q=search.value.toLowerCase();
+      for(const [code,{row}] of this._rows){
+        const nm=o.getName(code)||"";
+        row.style.display=(!q||(code+" "+nm).toLowerCase().includes(q))?"":"none";
+      }
+    });
+    allBtn.addEventListener("click",()=>{o.setValues([...o.items]);this.sync();this._label();if(o.onChange)o.onChange();});
+    noneBtn.addEventListener("click",()=>{o.setValues([]);this.sync();this._label();if(o.onChange)o.onChange();});
+    this._search=search; this.panel.append(search,tools,list); this.sync();
+  }
+  sync(){const cur=new Set(this.values());for(const [code,{cb}] of this._rows)cb.checked=cur.has(code);}
+  _label(){
+    const o=this.o, all=o.items, v=this.values(), n=v.length;
+    if(n===0) this.label.textContent=o.label+": none";
+    else if(n>=all.length) this.label.textContent=o.label+": all";
+    else if(n===1){const c=v[0];this.label.textContent=o.label+": "+(o.getName(c)||c);}
+    else this.label.textContent=`${o.label}: ${n} selected`;
+  }
+  openPanel(){this.open=true;this.panel.hidden=false;this.root.classList.add("open");this.sync();
+    setTimeout(()=>{if(this._search)this._search.focus();},0);}
+  close(){this.open=false;this.panel.hidden=true;this.root.classList.remove("open");}
+  refresh(){this.sync();this._label();}              /* external state changed (drill-through) */
+  disable(d){this.btn.disabled=d;}
+}
+
+/* ---- scope bar state ---- */
+let __scopeMode=null;              /* last mode the snapshot group was rendered for */
+let __snapControls=[];             /* snapshot <select>s (rebuilt on mode change) */
+let __staticScopeControls=[];      /* scheme/trustee pickers + month selects (built once) */
+
+function scopeSelect(value,onChange){
+  const sel=el("select","scope-sel scope-data");
+  DATA.snapshots.forEach(s=>{const o=el("option");o.value=s;o.textContent=s;if(s===value)o.selected=true;sel.appendChild(o);});
+  sel.addEventListener("change",()=>onChange(sel.value));
+  return sel;
+}
+
+/* Snapshot segment: one select (Current/Trend) or the Earlier/Latest A·B pair (Compare). */
+function renderSnapshotGroup(){
+  const host=$("#scopeSnap"); if(!host) return;
+  host.innerHTML=""; const noScope=$("#scopeBar").classList.contains("is-nospace");
+  if(state.mode==="compare"){
+    const aSel=scopeSelect(state.snapA,v=>{state.snapA=v;render();});
+    const bSel=scopeSelect(state.snapB,v=>{state.snapB=v;render();});
+    host.append(el("span","lab","Earlier"),aSel,el("span","lab","Latest"),bSel);
+    __snapControls=[aSel,bSel];
+  }else{
+    const sel=scopeSelect(state.snap,v=>{state.snap=v;render();});
+    host.append(el("span","lab","Snapshot"),sel);
+    __snapControls=[sel];
+  }
+  if(noScope) __snapControls.forEach(c=>c.disabled=true);
+  __scopeMode=state.mode;
+}
+
+function buildScopeBar(){
+  const bar=$("#scopeBar"); if(!bar) return;
+  bar.innerHTML="";
+
+  /* snapshot group (rebuilt on mode change) */
+  const snapGrp=el("div","scope-grp"); snapGrp.id="scopeSnap"; bar.appendChild(snapGrp);
+  renderSnapshotGroup();
+
+  /* scheme picker — the primary entity, multi-select */
+  const schemePicker=new MultiPicker({
+    label:"Scheme", items:DATA.schemes,
+    getName:c=>(DATA.names&&DATA.names.scheme&&DATA.names.scheme[c])||c,
+    getValues:()=>state.schemes, setValues:a=>{state.schemes=a;}, onChange:()=>render()
+  });
+  bar.appendChild(schemePicker.root); window.__schemePicker=schemePicker;
+
+  /* trustee picker */
+  const trusteePicker=new MultiPicker({
+    label:"Trustee", items:DATA.trustees,
+    getName:c=>(DATA.names&&DATA.names.trustee&&DATA.names.trustee[c])||c,
+    getValues:()=>state.trustees, setValues:a=>{state.trustees=a;}, onChange:()=>render()
+  });
+  bar.appendChild(trusteePicker.root); window.__trusteePicker=trusteePicker;
+
+  /* month range (From–To, clamped to keep from ≤ to) */
+  const fSel=el("select","scope-sel scope-data");
+  const tSel=el("select","scope-sel scope-data");
+  DATA.months.forEach(m=>{
+    const o1=el("option");o1.value=m;o1.textContent=R9(m);if(m===state.mfrom)o1.selected=true;fSel.appendChild(o1);
+    const o2=el("option");o2.value=m;o2.textContent=R9(m);if(m===state.mto)o2.selected=true;tSel.appendChild(o2);
+  });
+  fSel.addEventListener("change",()=>{state.mfrom=fSel.value;if(state.mfrom>state.mto){state.mto=state.mfrom;tSel.value=state.mfrom;}render();});
+  tSel.addEventListener("change",()=>{state.mto=tSel.value;if(state.mto<state.mfrom){state.mfrom=state.mto;fSel.value=state.mfrom;}render();});
+  const mGrp=el("div","scope-grp"); mGrp.append(el("span","lab","From"),fSel,el("span","lab","To"),tSel);
+  bar.appendChild(mGrp);
+
+  __staticScopeControls=[schemePicker,trusteePicker,fSel,tSel];
+
+  /* mode toggle (Current | Compare | Trend) — pushed to the right */
+  bar.appendChild(el("div","scope-spacer"));
+  const modeGrp=el("div","scope-mode"); modeGrp.id="scopeMode";
+  for(const m of [{k:"current",t:"Current"},{k:"compare",t:"Compare"},{k:"trend",t:"Trend"}]){
+    const b=el("button"); b.type="button"; b.dataset.m=m.k; b.textContent=m.t;
+    b.addEventListener("click",()=>{ if(b.disabled)return; state.mode=m.k; document.body.dataset.mode=m.k; render(); });
+    modeGrp.appendChild(b);
+  }
+  bar.appendChild(modeGrp);
+}
+
+/* Refresh scope-bar availability + labels for the active tab. Called from render(). */
+function updateScopeBar(){
+  const t=currentTab();
+  /* mode buttons: enable per tab.modes, dim the rest */
+  const modeHost=$("#scopeMode");
+  if(modeHost) modeHost.querySelectorAll("button").forEach(b=>{
+    const on=t.modes.includes(b.dataset.m);
+    b.classList.toggle("on", on && state.mode===b.dataset.m);
+    b.classList.toggle("dim", !on);
+    b.disabled=!on;
+  });
+  /* data-scope controls: dim entirely on no-dataset tabs (Settings/Theme) */
+  const noScope=!!t.noScope;
+  const bar=$("#scopeBar"); if(bar) bar.classList.toggle("is-nospace", noScope);
+  for(const c of [...__staticScopeControls, ...__snapControls]){
+    if(c instanceof MultiPicker) c.disable(noScope);
+    else if(c && "disabled" in c) c.disabled=noScope;
+  }
+  /* sync picker state — drill-through may have changed the selection */
+  if(window.__schemePicker) window.__schemePicker.refresh();
+  if(window.__trusteePicker) window.__trusteePicker.refresh();
+  /* rebuild the snapshot segment when the mode changes shape (single vs A/B) */
+  if(state.mode!==__scopeMode) renderSnapshotGroup();
+}
+
+/* ============================================================
    TAB REGISTRY
    ============================================================ */
 const TABS=[
@@ -4068,9 +4327,9 @@ const TABS=[
     render:renderVolumeTiers},
   {id:"trustee-portfolio",n:"22",title:"Trustee Portfolio",sub:"Per trustee: scheme count, bills, and how concentrated each portfolio is.",modes:["current"],
     render:renderTrusteePortfolio},
-  {id:"settings",n:"23",title:"Settings",sub:"App preferences — display, navigation, and dataset info. Choices persist in localStorage.",modes:["current"],
+  {id:"settings",n:"23",title:"Settings",sub:"App preferences — display, navigation, and dataset info. Choices persist in localStorage.",modes:["current"],noScope:true,
     render:renderSettings},
-  {id:"theme",n:"24",title:"Theme",sub:"Choose a visual theme for the dashboard.",modes:["current"],
+  {id:"theme",n:"24",title:"Theme",sub:"Choose a visual theme for the dashboard.",modes:["current"],noScope:true,
     render:renderTheme},
 ];
 
@@ -4094,14 +4353,8 @@ function render(){
   $("#pageSub").textContent=t.sub;
   $("#modePill").textContent=({current:"Current view",compare:`Compare · ${state.snapA} → ${state.snapB}`,trend:"Trend over months"})[state.mode];
   const content=$("#content");content.innerHTML="";
-  // mode buttons availability
-  const modeHost=$("#fMode");
-  if(modeHost){
-    modeHost.querySelectorAll("button").forEach(b=>{
-      const on=t.modes.includes(b.dataset.m);b.classList.toggle("on",state.mode===b.dataset.m);b.disabled=!on;
-      if(on&&state.mode===b.dataset.m)b.classList.add("on");
-    });
-  }
+  // refresh the global scope bar (mode-button availability, dimming, picker labels)
+  updateScopeBar();
   t.render(content);
   content.querySelectorAll(".card").forEach((c,i)=>c.style.animationDelay=(i*40)+"ms");
 }
@@ -4272,6 +4525,8 @@ function init(){
   // default compare A = previous, B = latest
   state.snapA=DATA.snapshots[Math.max(0,DATA.snapshots.length-2)];
   state.snapB=DATA.latest;
+  // build the global scope/filter bar once; updateScopeBar() refreshes it per render
+  buildScopeBar();
   render();
 }
 if(document.readyState!=="loading")init();
