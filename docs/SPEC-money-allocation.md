@@ -91,97 +91,94 @@ target** is the reference line on the charts and the tile threshold.
 
 ## 3. UX — Information architecture
 
-The tab is **matrix-only** and carries its own **on-tab mode control** — there is
-no global filter bar / mode toggle in the chrome. The page header is the single
-"Money Allocation" title (the former in-content "Contribution Allocation" heading
-was merged into it). Below it sits one **control bar** above one **matrix table**:
-
-- **Control bar, LEFT:** snapshot selector(s), then the **`[By trustee][By scheme]`**
-  toggle (default **By trustee**).
-- **Control bar, RIGHT:** the **`[Current][Compare]`** switch — this tab's mode
-  control. `TABS.modes = ["current"]`; the old global Compare/Trend paths for this
-  tab were removed (Trend is gone).
+The tab is **matrix-only**. Controls use the **global scope bar** (snapshot A/B,
+Current/Compare mode toggle, scheme/trustee pickers, month range) — the same
+shared filter surface used by all other tabs. The only tab-specific control is
+the **`[By trustee][By scheme]`** toggle in the scope bar (dimmed on other tabs).
+`TABS.modes = ["current","compare"]`; Trend is not available for this tab.
 
 ### 3.1 Current view
 
-The Current view is **matrix-only** — the tile strip and the two summary charts
-were removed at the user's request (2026-07-10) so the tab focuses on the
-allocation matrix. The layout is:
+The Current view is **matrix-only** — no tiles, no charts, just the allocation
+matrix. Layout:
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│  Money Allocation                                (page header — merged) │
-├──────────────────────────────────────────────────────────────────────┤
-│  Snapshot [20260710 ▾] [By trustee][By scheme]          [Current][Compare] │  control bar
-├──────────────────────────────────────────────────────────────────────┤
-│  ┌────────┬─────────┬─────────┬─────────┐                            │  matrix table
-│  │Trustee │ Feb 26  │ Mar 26  │ … Jul 26│   (no Total column)        │  (code only —
-│  │        │P|A|Al%  │P|A|Al%  │ P|A|Al% │                            │    no full names)
-│  ├────────┼─────────┼─────────┼─────────┤                            │
-│  │ BCT    │ …       │ …       │ …       │                            │
-│  │ Grand total …                              │                        │  footer
-│  └────────┴─────────┴─────────┴─────────┘                            │
-└──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Money Allocation                           (page header)    │
+├─────────────────────────────────────────────────────────────┤
+│  (global scope bar: snap · mode · schemes · trustee · mo)   │
+├─────────────────────────────────────────────────────────────┤
+│  ┌────────┬─────────┬─────────┬─────────┐                   │
+│  │Trustee │ Feb 26  │ Mar 26  │ … Jul 26│  (no Total col)   │
+│  │        │P|A|Al%  │P|A|Al%  │ P|A|Al% │                   │
+│  ├────────┼─────────┼─────────┼─────────┤                   │
+│  │ BCT    │ …       │ …       │ …       │                   │
+│  │ Grand total …                    │                       │
+│  └────────┴─────────┴─────────┴─────────┘                   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-- **Control bar (left):** one **snapshot `<select>`** (default `pymSnap(state.snap)`,
-  held in `__allocSnap`) followed by the **`[By trustee][By scheme]`** toggle
-  (default **By trustee**, `__allocBy`). **Control bar (right):** the
-  **`[Current][Compare]`** switch (`__allocView`). Any control re-renders.
-- **Matrix table:** rows = trustees **or** schemes (toggle); the **label cell
-  shows the code only** — no scheme full name, no trustee full name; columns =
-  one group per visible month (Pay / Avail / ALLOC %), **no Total column**;
-  **Grand total** footer row (per-month only).
+- **Matrix table:** rows = trustees **or** schemes (toggle); label cell shows
+  **code only** — no scheme/trustee full name; columns = one group per visible
+  month (Pay / Avail / ALLOC %), **no Total column**; **Grand total** footer
+  row (per-month only).
 
-### 3.2 Compare view (on-tab switch)
+### 3.2 Compare view (global scope bar)
 
-Flipping the right-side switch to **Compare** swaps in a two-snapshot comparison.
-The control bar gains a **second snapshot `<select>`** (Snapshot A and Snapshot B):
+The global **Compare** mode renders a two-snapshot comparison matrix.
+Each month group widens from 3 to **5 sub-columns**:
 
 ```
-  Snapshot A [20260709 ▾]  Snapshot B [20260710 ▾]  [By trustee][By scheme]   [Current][Compare]
+  Pay · Avail · ALLOC% · ←% · Δ%
 ```
 
-- **Defaults:** A = **latest − 1**, B = **latest** pym snapshot (`__allocSnapA` /
-  `__allocSnapB`; `null` → defaults).
-- **Matrix** keeps the per-(allocator × month) shape, but each month group widens
-  from 3 to **5 sub-columns**: `Pay · Avail · ALLOC% · pre ALLOC% · change %`.
-  - `Pay / Avail / ALLOC%` are for **snapshot B** (the later one).
-  - `pre ALLOC%` is snapshot **A**'s allocation rate for that (allocator, month).
-  - `change %` = `(ALLOC%_B − ALLOC%_A) × 100` in percentage points, signed
-    `+`/`−`, with a green/red tone dot (green = improved allocation).
-  - Header group `colspan="5"`; the 5-label sub-header repeats per month; the
-    **Grand total** footer aggregates A and B separately per month.
+- `Pay / Avail / ALLOC%` are for **snapshot B** (the later one).
+- `←%` (short for "pre ALLOC%") is snapshot **A**'s allocation rate for that
+  (allocator, month). Tooltip reads "Snapshot A allocation %".
+- `Δ%` = `(ALLOC%_B − ALLOC%_A) × 100`, signed `+`/`−`. Displayed as `±X.XX%`
+  (no "pp" suffix).
+- Header group `colspan="5"`; the 5-label sub-header repeats per month; the
+  **Grand total** footer aggregates A and B separately per month.
 
-### 3.3 (removed — Trend)
+#### Cell highlights (compare mode)
 
-The Trend view was removed when the on-tab Current/Compare switch took over
-(2026-07-10). There is no Trend path for this tab.
+Both `←%` and `Δ%` cells carry a subtle **background tint** based on value tone:
 
-### 3.4 Snapshot selection
+| Cell | Tone | Background |
+|---|---|---|
+| `←%` (prev. alloc%) | ≥98% green, ≥95% yellow, else red | `rgba` tint matching tone |
+| `Δ%` (change) | positive = green, negative = red | `rgba` tint matching tone |
 
-Payment data covers fewer snapshots than the bill dataset
-(`DATA.pym.snapshots` ⊆ `DATA.snapshots`) and there is no global snapshot
-selector, so the tab carries its own. **Current** uses one (`__allocSnap`);
-**Compare** uses two (`__allocSnapA` / `__allocSnapB`, default latest−1 / latest).
-All default to `pymSnap(state.snap)` semantics (active snapshot if it has pym
-data, else the latest pym source) and persist across re-renders until changed.
+A **color legend** is rendered below the table showing the dot-and-label key:
+"≥98% & improvement · ≥95% · below target & deterioration".
+
+#### Month group separation
+
+Even month blocks (2nd, 4th, 6th) get a subtle `var(--surface-2)` alternating
+background. A vertical `border-right` on the `Δ%` column separates groups.
+
+#### Compact sizing (compare mode)
+
+Compare mode uses a tighter `font-size: .7rem` with reduced cell padding
+(`4px 5px` tbody, `5px 5px` thead) to fit all 5 sub-columns × 6 months in a
+desktop browser window with the sidebar visible.
 
 ---
 
 ## 4. UX — Interaction
 
-- **`[Current][Compare]` switch** (right of the control bar) is the tab's mode
-  control — `__allocView`; there is no global mode toggle. Current = single-
-  snapshot matrix; Compare = two-snapshot matrix with pre ALLOC% / change %.
-- **Snapshot `<select>`(s)** — one in Current (`__allocSnap`), two in Compare
-  (`__allocSnapA` / `__allocSnapB`, default latest−1 / latest).
-- **`[By trustee][By scheme]` toggle** (left) re-renders the matrix; state in
-  `__allocBy`, default **By trustee**.
-- **Scheme picker** scopes the matrix (the global behaviour, where wired).
-- Matrix rows are **not clickable**; no column sort (sorted by total Pay AMT desc);
-  no pagination. The body scrolls; the header is sticky; the label column sticks
-  left during horizontal scroll.
+- **Mode toggle** uses the global Compare mode from the scope bar
+  (`state.mode === "compare"`). No tab-local mode switch.
+- **Snapshot A / B** are set via the global scope bar's snapshot selects
+  (`state.snapA` / `state.snapB`).
+- **`[By trustee][By scheme]` toggle** sits in the global scope bar, dimmed on
+  other tabs. State held in `window.__allocBy` ("tr" / "sc"), default **By
+  trustee**.
+- **Scheme picker / trustee picker / month range** use the global scope bar
+  controls shared with all tabs.
+- Matrix rows are **not clickable**; no column sort (sorted by total Pay AMT
+  desc); no pagination. The body scrolls; the header is sticky; the label
+  column sticks left during horizontal scroll.
 
 ---
 
@@ -189,10 +186,14 @@ data, else the latest pym source) and persist across re-renders until changed.
 
 - **No tiles, no charts** — the tab is a single matrix (`.alloc-*` table CSS:
   sticky `thead`, `tfoot` grand total, tone dots via `.pend-dot`, tabular-nums).
-- **Control bar** uses pill toggles (`.alloc-toggle`) for both the By toggle and
-  the Current/Compare switch, plus `.alloc-snap` selects.
+- **Compare mode** (`.alloc.is-compare`): tighter padding/font, month-group
+  vertical separators (`th.grp-end` / `td.grp-end`), alternating tint on even
+  month blocks, cell-level tone highlights (`.tone-green` / `.tone-yellow` /
+  `.tone-red`) with background `rgba` tint.
+- **Color legend** (`.alloc-legend`) sits below the compare table, showing dot
+  + label for each tone band.
 - **Tone dots** carry the status: ALLOC% wears the good-when-high band (≥98 green /
-  ≥95 yellow / else red via `allocTone`); Compare `change %` wears green for an
+  ≥95 yellow / else red via `allocTone`); Compare `Δ%` wears green for an
   increase, red for a decrease.
 - Text wears ink tokens; the colored dot carries the tone, never the value text.
 - Light theme only; colors via CSS variables.
@@ -206,34 +207,33 @@ data, else the latest pym source) and persist across re-renders until changed.
 - **`R9(ym)`** — `"2026-07" → "Jul 26"` (month group headers).
 - **`I9(n)`** — integer with thousands separator (used elsewhere; this tab uses
   `money` for amounts).
-- ALLOC % is rendered as `XX.X%`; deltas as `±X.XX pp`.
+- ALLOC % is rendered as `XX.X%`; `Δ%` deltas as `±X.XX%` (no "pp" suffix).
 
 ---
 
 ## 7. Implementation checklist
 
-1. `pymSnap(snap)` — resolve to a snapshot that exists in `DATA.pym`.
-2. `pymFilter(snap)` — `DATA.pym.rows` ∩ {snap, month-range, selected schemes}.
-3. `pymAggregate(snap, by)` — group by scheme (`sc`) or trustee (`tr`); sum
+1. `pymFilter(snap)` — `DATA.pym.rows` ∩ {snap, month-range, selected schemes}.
+2. `pymAggregate(snap, by)` — group by scheme (`sc`) or trustee (`tr`); sum
    `pay`/`avail` per month + a total (used for sort); capture the trustee per
    scheme.
-4. `allocOf(pay, avail)` + `allocTone(pct)` + `toneHex` for the dots.
-5. `allocCells(m, strong)` → 3 `<td>`s (Pay / Avail / ALLOC %+dot).
-6. `drawAllocTable({agg, by})` — Current matrix; two header rows (rowspan-2 label
+3. `allocOf(pay, avail)` + `allocTone(pct)` + `toneHex` for the dots.
+4. `allocCells(m, strong)` → 3 `<td>`s (Pay / Avail / ALLOC %+dot).
+5. `drawAllocTable({agg, by})` — Current matrix; two header rows (rowspan-2 label
    + colspan-3 month groups — **no Total group**); tbody with **code-only** label
    cells; tfoot grand total (per-month only).
-7. `drawAllocCompareTableLocal({a, b, by})` — Compare matrix; colspan-**5** month
-   groups (`Pay / Avail / ALLOC% / pre ALLOC% / change %`); `cmpCells(vb, va)`
-   renders B's Pay/Avail/ALLOC% + A's pre ALLOC% + the signed change %.
-8. `allocSnapField / allocByToggle / allocViewSwitch` — shared control-bar pieces.
-9. `renderMoneyAllocationCurrent` — **control bar** (left: snapshot `<select>` +
-   By toggle; right: Current/Compare switch) → `drawAllocTable`. `__allocSnap`
-   holds the snapshot, `__allocBy` the grouping. **No section cap (header merged
-   into the page title); no tiles, no charts.**
-10. `renderMoneyAllocationCompare` — control bar with **two** snapshot `<select>`s
-    (A/B, default latest−1/latest) + By toggle + switch → `drawAllocCompareTableLocal`.
-11. `renderMoneyAllocation(content)` dispatches on `__allocView`; guards the
-    no-pym case. `TABS.modes = ["current"]` (on-tab switch is the sole control).
+6. `drawAllocCompareTableLocal({a, b, by})` — Compare matrix; colspan-**5** month
+   groups (`Pay · Avail · ALLOC% · ←% · Δ%`); `cmpCells(vb, va)` renders B's
+   Pay/Avail/ALLOC% + A's ←% + Δ% with tone-based cell background, tone dot,
+   and signed `±X.XX%` value. Includes `.alloc-legend` below the table.
+7. `window.__allocBy` — "tr" / "sc" grouping state, wired through the global
+   scope bar `#scopeAllocBy` toggle (dimmed on non-alloc tabs).
+8. `renderMoneyAllocationCurrent` — table only (controls live in scope bar).
+   Calls `drawAllocTable` with `state.snap`.
+9. `renderMoneyAllocationCompare` — table only. Calls
+   `drawAllocCompareTableLocal` with `state.snapA` / `state.snapB`.
+10. `renderMoneyAllocation(content)` dispatches on `state.mode`; guards the
+    no-pym case. `TABS.modes = ["current","compare"]` (no Trend).
 
 ---
 
@@ -241,20 +241,24 @@ data, else the latest pym source) and persist across re-renders until changed.
 
 - [ ] Tab appears in the **Overview** group as **02 Money Allocation**, below
       Contribution Pend Tagging.
-- [ ] **Single header** — page title "Money Allocation"; no in-content
-      "Contribution Allocation" heading.
-- [ ] **Control bar:** left = snapshot `<select>` + `[By trustee][By scheme]`
-      (default trustee); right = `[Current][Compare]` (default Current).
+- [ ] **Single header** — page title "Money Allocation"; no in-content heading.
+- [ ] **Controls live in the global scope bar:** snapshot A/B, Current/Compare
+      mode toggle, scheme/trustee/month selectors, plus the `[By trustee][By
+      scheme]` toggle (dimmed on other tabs).
 - [ ] **Current** matrix: code-only labels, no Total column, 3 sub-cols/month
-      (Pay/Avail/ALLOC%); ALLOC% = Pay ÷ (Pay + Avail). Trustee view = 12 rows,
-      scheme view = 24.
-- [ ] **Compare** adds a 2nd snapshot `<select>` (A default latest−1, B latest);
-      each month group widens to 5 sub-cols (`…/pre ALLOC%/change %`); `change %`
-      is signed pp with a green/red dot.
-- [ ] Switching Current⇄Compare, changing any snapshot `<select>`, or the By
+      (Pay/Avail/ALLOC%); ALLOC% = Pay ÷ (Pay + Avail).
+- [ ] **Compare** matrix: 5 sub-cols/month (`Pay · Avail · ALLOC% · ←% · Δ%`);
+      `←%` = snapshot A's alloc%, `Δ%` = signed `±X.XX%` (no "pp").
+- [ ] **Compare cell highlights:** `←%` cells tinted green/red by alloc-tone;
+      `Δ%` cells tinted green (improvement) / red (deterioration). Legend below
+      table.
+- [ ] **Month separation:** vertical border after each `Δ%` column; alternating
+      tint on even month blocks.
+- [ ] **Compact sizing:** compare mode fits 5 cols × 6 months in a desktop
+      browser window with sidebar visible.
+- [ ] Switching Current⇄Compare, changing any scope-bar control, or the By
       toggle re-renders without error.
-- [ ] `TABS.modes = ["current"]` (no global Compare/Trend for this tab; Trend
-      removed).
+- [ ] `TABS.modes = ["current","compare"]` (no Trend).
 - [ ] No `ReferenceError` / uncaught error in either view (jsdom smoke: 0 errors).
 
 ---
