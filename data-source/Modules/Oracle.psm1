@@ -18,7 +18,11 @@ function Connect-OracleDatabase {
     if (-not (Test-Path $DllPath)) {
         throw "Oracle.ManagedDataAccess.dll not found: $DllPath"
     }
-    Add-Type -Path $DllPath
+    # Load the ODP.NET assembly at most once per session: Add-Type throws if the
+    # assembly is already loaded (e.g. a second connection, or a re-imported module).
+    if (-not ('Oracle.ManagedDataAccess.Client.OracleConnection' -as [type])) {
+        Add-Type -Path $DllPath
+    }
 
     $Connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection($ConnectionString)
     $Connection.Open()
