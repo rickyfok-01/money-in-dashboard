@@ -643,9 +643,9 @@ table.alloc.is-compare tbody td:where(:nth-child(n+27):nth-child(-n+31)){
 }
 
 /* tone highlights for ←% and Δ% cells in compare mode */
-table.alloc.is-compare tbody td.tone-green{background:rgba(22,163,74,.07)}
-table.alloc.is-compare tbody td.tone-yellow{background:rgba(245,158,11,.07)}
-table.alloc.is-compare tbody td.tone-red{background:rgba(239,68,68,.07)}
+table.alloc tbody td.tone-green{background:rgba(22,163,74,.07)}
+table.alloc tbody td.tone-yellow{background:rgba(245,158,11,.07)}
+table.alloc tbody td.tone-red{background:rgba(239,68,68,.07)}
 .alloc-legend{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.65rem;color:var(--ink-2)}
 .alloc-legend .pend-dot{width:8px;height:8px}
 

@@ -487,7 +487,8 @@ function allocCells(m,strong){
   const pay=m.pay||0,av=m.avail||0,a=allocOf(pay,av),t=allocTone(a==null?null:a*100);
   const dot=t?`<span class="pend-dot" style="background:${toneHex(t)}"></span>`:"";
   const sc=strong?" strong":"";
-  return `<td class="num${sc}">${money(pay)}</td><td class="num${sc}">${money(av)}</td><td class="num${sc}"><span class="alloc-pct">${dot}${a==null?"—":(a*100).toFixed(1)+"%"}</span></td>`;
+  const tCls=t?` tone-${t}`:"";
+  return `<td class="num${sc}">${money(pay)}</td><td class="num${sc}">${money(av)}</td><td class="num${sc}${tCls}"><span class="alloc-pct">${dot}${a==null?"—":(a*100).toFixed(1)+"%"}</span></td>`;
 }
 function drawAllocTable(host,{agg,by}){
   const months=agg.months,rows=[...agg.rows].sort((a,b)=>b.tot.pay-a.tot.pay);
@@ -502,7 +503,7 @@ function drawAllocTable(host,{agg,by}){
     return `<tr>${lbl}${months.map(ym=>allocCells(r.months[ym]||{pay:0,avail:0})).join("")}</tr>`;
   }).join("");
   const foot=`<tr><td class="l">Grand total</td>${months.map(ym=>allocCells(gtot.months[ym],true)).join("")}</tr>`;
-  host.innerHTML=`<div class="alloc-table-wrap"><table class="alloc"><thead><tr><th rowspan="2" class="l label-th">${by==="sc"?"Scheme":"Trustee"}</th>${grpHead}</tr><tr>${subHead}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>`;
+  host.innerHTML=`<div class="alloc-table-wrap"><table class="alloc"><thead><tr><th rowspan="2" class="l label-th">${by==="sc"?"Scheme":"Trustee"}</th>${grpHead}</tr><tr>${subHead}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div><div class="alloc-legend"><span class="pend-dot" style="background:#16a34a"></span> ≥98% · <span class="pend-dot" style="background:#f59e0b"></span> ≥95% · <span class="pend-dot" style="background:#ef4444"></span> below target</div>`;
 }
 /* Compare view (on-tab switch): per (allocator × month) Pay/Avail/ALLOC% for
    snapshot B, plus pre ALLOC% (snapshot A) and change % (B − A) after ALLOC%. */
