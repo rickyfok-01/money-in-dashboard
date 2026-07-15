@@ -464,18 +464,15 @@ function pendTotalPctCell(pct,tt){
    Money Allocation (Overview tab) — SPEC_money_allocation_by_scheme.md
    Payment allocation driven by DATA.pym (con-pym-6mon-*.csv):
    PAY_AMT / AVAIL_AMOUNT per (scheme × month × snapshot).
-   ALLOC% = Pay ÷ (Pay + Avail). Matrix-only anatomy: a control bar
-   — snapshot selector(s) + Scheme ⇄ Trustee toggle on the LEFT, a
-   Current/Compare switch on the RIGHT — above a single matrix table.
-   The on-tab Current/Compare switch IS this tab's mode control (the
-   global Compare/Trend toggle is hidden here; Trend was removed).
-   Compare shows two snapshot selectors (default latest & latest−1)
-   and adds pre ALLOC% + change % columns after each ALLOC%.
+   ALLOC% = Pay ÷ (Pay + Avail). Matrix-only anatomy: a table above
+   a single matrix table. Snapshot selection and Current/Compare mode
+   live in the Dashboard scope bar; the "Group by" toggle (Trustee /
+   Scheme) is the only tab-local control, also in the scope bar.
+   Compare adds pre ALLOC% + change % columns after each ALLOC%.
    ============================================================ */
 const allocOf=(pay,avail)=>{const p=Number(pay)||0,a=Number(avail)||0;return (p+a)>0?p/(p+a):null;};
 const allocTone=pct=>pct==null?null:(pct>=98?"green":pct>=95?"yellow":"red");
 const money=v=>{if(v==null||isNaN(v))return "—";const a=Math.abs(Number(v)),s=Number(v)<0?"−":"";if(a>=1e9)return s+"$"+(a/1e9).toFixed(2)+"B";if(a>=1e6)return s+"$"+(a/1e6).toFixed(1)+"M";if(a>=1e3)return s+"$"+(a/1e3).toFixed(1)+"K";return s+"$"+Math.round(a);};
-function pymSnap(snap){return (DATA.pym&&DATA.pym.snapshots.includes(snap))?snap:(DATA.pym.snapshots[DATA.pym.snapshots.length-1]||snap);}
 function pymFilter(snap){const ss=new Set(state.schemes),ts=new Set(state.trustees);return DATA.pym.rows.filter(r=>r.s===snap&&r.ym>=state.mfrom&&r.ym<=state.mto&&ss.has(r.sc)&&ts.has(r.tr));}
 function pymAggregate(snap,by){ /* by: "sc" | "tr" */
   const months=DATA.pym.months.filter(m=>m>=state.mfrom&&m<=state.mto);
@@ -520,80 +517,39 @@ function drawAllocCompareTableLocal(host,{a,b,by}){
   months.forEach(ym=>{gt.A[ym]={pay:0,avail:0};gt.B[ym]={pay:0,avail:0};});
   rows.forEach(r=>{months.forEach(ym=>{const va=(r.ra&&r.ra.months[ym])||{pay:0,avail:0};const vb=(r.rb&&r.rb.months[ym])||{pay:0,avail:0};gt.A[ym].pay+=va.pay;gt.A[ym].avail+=va.avail;gt.B[ym].pay+=vb.pay;gt.B[ym].avail+=vb.avail;});});
   const grpHead=months.map(ym=>`<th colspan="5" class="grp-head">${R9(ym)}</th>`).join("");
-  const subHead=months.map(()=>`<th>Pay</th><th>Avail</th><th>Alloc%</th><th>pre ALLOC%</th><th>change %</th>`).join("");
+  const subHead=months.map(()=>`<th>Pay</th><th>Avail</th><th>Alloc%</th><th title="Snapshot A allocation %">←%</th><th class="grp-end">Δ%</th>`).join("");
   const cmpCells=(vb,va,strong)=>{
     const sc=strong?" strong":"";
     const aB=allocOf(vb.pay,vb.avail), aA=allocOf(va.pay,va.avail);
-    const tB=allocTone(aB==null?null:aB*100);
+    const tB=allocTone(aB==null?null:aB*100), tA=allocTone(aA==null?null:aA*100);
     const ch=(aB==null||aA==null)?null:(aB-aA)*100;
     const cT=(ch==null||ch===0)?null:(ch>0?"green":"red");
     const dotB=tB?`<span class="pend-dot" style="background:${toneHex(tB)}"></span>`:"";
     const dotC=cT?`<span class="pend-dot" style="background:${toneHex(cT)}"></span>`:"";
-    return `<td class="num${sc}">${money(vb.pay||0)}</td><td class="num${sc}">${money(vb.avail||0)}</td><td class="num${sc}"><span class="alloc-pct">${dotB}${aB==null?"—":(aB*100).toFixed(1)+"%"}</span></td><td class="num${sc}">${aA==null?"—":(aA*100).toFixed(1)+"%"}</td><td class="num${sc}"><span class="alloc-pct">${dotC}${ch==null?"—":(ch>0?"+":"")+ch.toFixed(2)+" pp"}</span></td>`;
+    const aCls=tA?` tone-${tA}`:"";
+    const cCls=cT?` tone-${cT}`:"";
+    return `<td class="num${sc}">${money(vb.pay||0)}</td><td class="num${sc}">${money(vb.avail||0)}</td><td class="num${sc}"><span class="alloc-pct">${dotB}${aB==null?"—":(aB*100).toFixed(1)+"%"}</span></td><td class="num${sc}${aCls}">${aA==null?"—":(aA*100).toFixed(1)+"%"}</td><td class="num${sc} grp-end${cCls}"><span class="alloc-pct">${dotC}${ch==null?"—":(ch>0?"+":"")+ch.toFixed(2)+"%"}</span></td>`;
   };
   const body=rows.map(r=>{
     const lbl=`<td class="l label-cell"><span class="lbl-code mono">${r.k}</span></td>`;
     return `<tr>${lbl}${months.map(ym=>cmpCells((r.rb&&r.rb.months[ym])||{pay:0,avail:0},(r.ra&&r.ra.months[ym])||{pay:0,avail:0})).join("")}</tr>`;
   }).join("");
   const foot=`<tr><td class="l">Grand total</td>${months.map(ym=>cmpCells(gt.B[ym],gt.A[ym],true)).join("")}</tr>`;
-  host.innerHTML=`<div class="alloc-table-wrap"><table class="alloc"><thead><tr><th rowspan="2" class="l label-th">${by==="sc"?"Scheme":"Trustee"}</th>${grpHead}</tr><tr>${subHead}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>`;
+  host.innerHTML=`<div class="alloc-table-wrap"><table class="alloc is-compare"><thead><tr><th rowspan="2" class="l label-th">${by==="sc"?"Scheme":"Trustee"}</th>${grpHead}</tr><tr>${subHead}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div><div class="alloc-legend"><span class="pend-dot" style="background:#16a34a"></span> ≥98% &amp; improvement · <span class="pend-dot" style="background:#f59e0b"></span> ≥95% · <span class="pend-dot" style="background:#ef4444"></span> below target &amp; deterioration</div>`;
 }
-/* Control-bar pieces shared by the Current & Compare renderers. */
-function allocSnapField(label,value){
-  const f=el("div","alloc-field");f.innerHTML=`<span class="lab">${label}</span>`;
-  const sel=el("select","alloc-snap");
-  DATA.pym.snapshots.forEach(s=>{const o=el("option");o.value=s;o.textContent=s;if(s===value)o.selected=true;sel.appendChild(o);});
-  f.appendChild(sel);return [f,sel];
-}
-function allocByToggle(onChange){
-  const t=el("div","alloc-toggle");
-  t.innerHTML=`<button data-by="tr" class="${__allocBy==="tr"?"on":""}">By trustee</button><button data-by="sc" class="${__allocBy==="sc"?"on":""}">By scheme</button>`;
-  t.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{__allocBy=b.dataset.by;t.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));onChange();}));
-  return t;
-}
-function allocViewSwitch(){
-  const v=el("div","alloc-toggle alloc-view");
-  v.innerHTML=`<button data-v="current" class="${__allocView==="current"?"on":""}">Current</button><button data-v="compare" class="${__allocView==="compare"?"on":""}">Compare</button>`;
-  v.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{__allocView=b.dataset.v;render();}));
-  return v;
-}
+window.__allocBy="tr";   // matrix row grouping: "tr" (trustee) | "sc" (scheme)
 function renderMoneyAllocation(content){
   if(!DATA.pym||!DATA.pym.rows.length){content.appendChild(el("div","pend-empty","No payment (pym) data loaded."));return;}
-  if(__allocView==="compare")return renderMoneyAllocationCompare(content);
+  if(state.mode==="compare")return renderMoneyAllocationCompare(content);
   return renderMoneyAllocationCurrent(content);
 }
-let __allocBy="tr";        // matrix row grouping: "tr" (trustee) | "sc" (scheme)
-let __allocSnap=null;      // Current view snapshot override; null = pymSnap(state.snap)
-let __allocView="current"; // on-tab Current/Compare switch — this tab's mode control
-let __allocSnapA=null, __allocSnapB=null; // Compare snapshots; default latest−1 / latest
 function renderMoneyAllocationCurrent(content){
-  const snap=__allocSnap||pymSnap(state.snap);
-  const ctrl=el("div","alloc-ctrl");
-  const left=el("div","alloc-left");
-  const [field,snapSel]=allocSnapField("Snapshot",snap);
-  left.appendChild(field);
-  left.appendChild(allocByToggle(drawMatrix));
-  ctrl.appendChild(left);ctrl.appendChild(allocViewSwitch());
-  content.appendChild(ctrl);
   const tableHost=el("div");content.appendChild(tableHost);
-  function drawMatrix(){const s=__allocSnap||pymSnap(state.snap);drawAllocTable(tableHost,{agg:pymAggregate(s,__allocBy),by:__allocBy});}
-  snapSel.addEventListener("change",()=>{__allocSnap=snapSel.value;drawMatrix();});
-  drawMatrix();
+  drawAllocTable(tableHost,{agg:pymAggregate(state.snap,window.__allocBy),by:window.__allocBy});
 }
 function renderMoneyAllocationCompare(content){
-  const snaps=DATA.pym.snapshots, defB=snaps[snaps.length-1], defA=snaps[snaps.length-2]||defB;
-  const ctrl=el("div","alloc-ctrl");
-  const left=el("div","alloc-left");
-  const [fA,selA]=allocSnapField("Snapshot A",__allocSnapA||defA);
-  const [fB,selB]=allocSnapField("Snapshot B",__allocSnapB||defB);
-  left.appendChild(fA);left.appendChild(fB);left.appendChild(allocByToggle(drawMatrix));
-  ctrl.appendChild(left);ctrl.appendChild(allocViewSwitch());
-  content.appendChild(ctrl);
   const tableHost=el("div");content.appendChild(tableHost);
-  function drawMatrix(){drawAllocCompareTableLocal(tableHost,{a:pymAggregate(__allocSnapA||defA,__allocBy),b:pymAggregate(__allocSnapB||defB,__allocBy),by:__allocBy});}
-  selA.addEventListener("change",()=>{__allocSnapA=selA.value;drawMatrix();});
-  selB.addEventListener("change",()=>{__allocSnapB=selB.value;drawMatrix();});
-  drawMatrix();
+  drawAllocCompareTableLocal(tableHost,{a:pymAggregate(state.snapA,window.__allocBy),b:pymAggregate(state.snapB,window.__allocBy),by:window.__allocBy});
 }
 
 /* ============================================================

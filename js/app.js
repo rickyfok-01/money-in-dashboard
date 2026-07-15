@@ -64,6 +64,17 @@ function buildScopeBar(){
   const mGrp=el("div","scope-grp"); mGrp.append(el("span","lab","From"),fSel,el("span","lab","To"),tSel);
   bar.appendChild(mGrp);
 
+  /* by-toggle (Money Allocation) — group by trustee / scheme, dimmed on other tabs */
+  const byGrp=el("div","scope-grp"); byGrp.id="scopeAllocBy";
+  const byLab=el("span","lab","Group");
+  const byMode=el("div","scope-mode");
+  for(const o of [{k:"tr",t:"Trustee"},{k:"sc",t:"Scheme"}]){
+    const b=el("button"); b.type="button"; b.dataset.by=o.k; b.textContent=o.t;
+    b.addEventListener("click",()=>{ if(b.disabled)return; window.__allocBy=o.k; render(); });
+    byMode.appendChild(b);
+  }
+  byGrp.append(byLab,byMode); bar.appendChild(byGrp);
+
   __staticScopeControls=[schemePicker,trusteePicker,fSel,tSel];
 
   /* mode toggle (Current | Compare | Trend) — pushed to the right */
@@ -100,6 +111,18 @@ function updateScopeBar(){
   if(window.__trusteePicker) window.__trusteePicker.refresh();
   /* rebuild the snapshot segment when the mode changes shape (single vs A/B) */
   if(state.mode!==__scopeMode) renderSnapshotGroup();
+  /* by-toggle: only active on money-allocation tab */
+  const byHost=$("#scopeAllocBy");
+  if(byHost){
+    const isAlloc=t.id==="money-allocation";
+    byHost.querySelectorAll("button").forEach(b=>{
+      const on=isAlloc && window.__allocBy===b.dataset.by;
+      b.classList.toggle("on",on);
+      b.classList.toggle("dim",!isAlloc);
+      b.disabled=!isAlloc;
+    });
+    byHost.style.opacity=isAlloc?"":"0.4";
+  }
 }
 
 /* ============================================================
@@ -110,7 +133,7 @@ const TABS=[
     cap:"Summary",render:renderSummary},
   {id:"pend-tagging",n:"01",title:"Contribution Pend Tagging",sub:"Overview — ER-submitted (A) vs Pending-Tagging (B) per (scheme × period). Two-snapshot comparison.",modes:["current","compare","trend"],
     render:renderPendTagging},
-  {id:"money-allocation",n:"02",title:"Money Allocation",sub:"Payment allocation: Pay AMT / Avail AMT / ALLOC% per (scheme × month) or (trustee × month). On-tab Current/Compare switch; Compare adds pre ALLOC% + change %.",modes:["current"],
+  {id:"money-allocation",n:"02",title:"Money Allocation",sub:"Payment allocation: Pay AMT / Avail AMT / ALLOC% per (scheme × month) or (trustee × month). Compare adds pre ALLOC% + change %.",modes:["current","compare"],
     render:renderMoneyAllocation},
   {id:"scheme-scorecard",n:"03",title:"Scheme Scorecard",sub:"Per-scheme master table — the scheme-centric view. Click a scheme to focus the dashboard.",modes:["current","compare","trend"],
     render:c=>renderGrouped(c,{keyFn:r=>r.sc,keyLabel:"Scheme",kIsScheme:true,trendTop:8,spark:true,

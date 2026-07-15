@@ -49,10 +49,13 @@ scripts/
 data/
   con-bill-6mon-YYYYMMDD.csv  # snapshot exports (Query 2 of contribution.sql)
   sql/contribution.sql        # authoritative source query + column semantics
-docs/                     # one markdown spec per tab + architecture (the build plan)
+docs/                     # all documentation (one markdown spec per tab + architecture + specs)
   README.md               # plan index
   00-architecture.md      # data model, design system, shared features
-  01-summary.md … 12-*.md # one doc per tab
+  01-summary.md … 21-trustee-portfolio.md  # one doc per tab (21 detail tabs)
+  STATUS.md               # current-state snapshot (read first in zero-context session)
+  SPEC-contribution-tagging.md  # spec for tab 01 (Contribution Pend Tagging)
+  SPEC-money-allocation.md      # spec for tab 02 (Money Allocation)
 ```
 
 ## Data pipeline
@@ -83,7 +86,7 @@ mode × frequency × account type × contribution month**, with these measures:
 | `AV_STATUS_CODE` | dim | bill status lifecycle (10 distinct) |
 | `AV_BILL_CONTR_MODE` | dim | REGULAR / LUMP_SUM / SURCHARGE |
 | `AV_FREQ_TYPE` | dim | contribution frequency (9 distinct, incl. blank) |
-| `SHORT_CODE` | dim | member account type (6 distinct: TVC/SVC/REE/CEE/PAH/SEP) |
+| `SHORT_CODE` | dim | member account type (eMPF member-type codes: REE=Regular Employee, CEE=Casual Employee, SEP=自僱人士, PAH=Personal Account Holder, TVC, SVC) |
 | `YEAR_MONTH` | dim | `YYYY-MM` contribution month (latest 6 kept) |
 | `BILL_COUNT` | measure | number of bills |
 | `ONTIME_SUBMIT_COUNT` | measure | bills with ≥1 on-time submit |

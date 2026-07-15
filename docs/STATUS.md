@@ -68,7 +68,7 @@ it catches `ReferenceError`/logic throws, not pixel output):
 | `index.html` | **the app** — sidebar nav + tabbed content; Chart.js + D3 via CDN; one vanilla-JS module |
 | `data.js` | generated dataset (`const DATA`); **never hand-edit** — regenerate via `scripts/build_data.py` |
 | `scripts/build_data.py` | CSVs + xlsx → `data.js`; type-coerces measures, keeps latest 6 YEAR_MONTHs; emits `DATA`, `DATA.pym`, `DATA.names` |
-| `SPEC_money_allocation_by_scheme.md` | requirements + UX/UI spec for tab 02 (mirror of `SPEC_contribution_tagging_by_scheme.md`) |
+| `docs/SPEC-money-allocation.md` | requirements + UX/UI spec for tab 02 (mirror of `docs/SPEC-contribution-tagging.md`) |
 | `CLAUDE.md` | architecture + tab catalogue + conventions (the authoritative "how to work here") |
 | `docs/` | one spec per tab + `00-architecture.md` (build plan / design system) |
 | `data/con-bill-6mon-*.csv` | bill source (Query 2 of `data/sql/contribution.sql`) |
@@ -99,17 +99,16 @@ Money Allocation on-tab Current/Compare switch is cleanly the tab's sole control
 the app code can't see it. Always append `globalThis.DATA = DATA` in the *same* eval.
 
 ### 5.4 Stray files — leave untouched
-`data/` contains stray copies from a **separate Vite project** (`data/CLAUDE.md`,
-`data/SPEC_contribution_tagging_by_scheme.md`, `data/.gitignore`, `data/image.png`).
-They reference `npm run data:convert` / `public/data/*.json` / `.vite` — none of
-which exist in this plain-HTML project. **Leave them alone.** The **root `.gitignore`
-is also Vite cruft** — it even lists `data.js` (which is tracked and committed here);
-treat that line as wrong, not as a signal to stop tracking `data.js`.
+`data/` historically contained stray copies from a **separate Vite project**.
+The **root `.gitignore`
+is also Vite cruft** — it still lists `data.js` as ignored (line 10), but `data.js`
+**is** tracked and committed here; treat that line as wrong, not as a signal to
+stop tracking `data.js`.
 
 ### 5.5 Adding a tab
 Tabs use **strict sequential numbering** (`n` = "00"… "24"); inserting one requires
 a deterministic re-walk of the `TABS` array to renumber the tail. Add the
-`docs/NN-*.md` spec first, then build to it (overview tabs get a root `SPEC_*.md`
+`docs/NN-*.md` spec first, then build to it (overview tabs get a `docs/SPEC-*.md`
 instead). `TABS[i].modes` controls which global modes a tab offers — but since the
 global toggle is dead code (§5.2), this mostly matters for tab-internal mode logic
 like Money Allocation's.
@@ -125,15 +124,13 @@ of the bill `tone`).
 - This **is** a git repo on `branch main` (tracking `origin/main`). Commit style is
   terse/casual (`change`, `New`, `x`) — a personal project, not precious about hygiene.
 - **Tracked & committed:** `index.html`, `data.js`, `CLAUDE.md`, `scripts/`,
-  `docs/`, the root `SPEC_*.md`, root `.gitignore`.
+  `docs/` (including `docs/STATUS.md`, `docs/SPEC-*.md`), root `.gitignore`.
 - **Not committed (deliberately):** the raw source CSVs/xlsx
   (`data/con-bill-*`, `data/con-pym-*`, `data/constant-scheme-info.xlsx`,
   `data/contribution-allocation.xlsx`) and the merge backup `index-old.html`. The
   repo ships the built `data.js`, not the source data — matching the established
   pattern. (Re-derive source from the CSVs by running the build script.)
-- **Never committed (Vite cruft, §5.4):** everything under `data/` that is not a
-  bill/pym CSV — `data/CLAUDE.md`, `data/SPEC_*.md`, `data/.gitignore`,
-  `data/image.png`, plus `scripts/image_to_excel.py`.
+- **Never committed (Vite cruft, §5.4):** files matching `.gitignore` patterns under `data/`.
 - When committing dashboard work, **stage explicitly** (`git add -u` for tracked
   mod/deletes, then `git add` the specific new files). **Never `git add -A`/`. `** —
   it would pull in the stray Vite files.
