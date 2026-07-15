@@ -3,7 +3,7 @@
 > **Purpose of this document:** A self-contained requirements + UX/UI spec for the
 > **Money Allocation** overview tab of the contribution dashboard. Written so the
 > panel can be re-implemented from scratch against a comparable dataset. Mirrors
-> the structure of `SPEC_contribution_tagging_by_scheme.md`.
+> the structure of `SPEC-contribution-tagging.md`.
 
 ---
 
