@@ -26,3 +26,16 @@ scripts/image_to_excel.py
 
 # Merge backup. (STATUS.md §6)
 index-old.html
+
+# data-source/ — Oracle data-collection tool (PowerShell). See data-source/README.md.
+# .env holds live DB credentials — NEVER commit. Copy .env.example -> .env to set up.
+data-source/.env
+
+# Runtime outputs of Run-StatisticQueries.ps1: per-run CSVs (data/temp), transcript
+# logs (data/log), and the daily zip (data/*.zip). Regenerate by running the script.
+# Directory structure is preserved via .gitkeep so the script's output dirs exist.
+data-source/data/temp/*
+!data-source/data/temp/.gitkeep
+data-source/data/log/*
+!data-source/data/log/.gitkeep
+data-source/data/*.zip
