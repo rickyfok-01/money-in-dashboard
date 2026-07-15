@@ -4,8 +4,11 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-A single, **self-contained HTML dashboard** (`index.html`) that visualizes **MPF
-contribution bill & submit-channel statistics** across daily DB snapshots. It
+A **no-build HTML dashboard** that visualizes **MPF contribution bill &
+submit-channel statistics** across daily DB snapshots. The app is split across
+`index.html` (markup + `<script>` bootstrap), `styles.css`, and a small set of
+plain `<script>` modules in `js/` (loaded in dependency order — see
+*Repository layout*). It
 replaces ad-hoc Excel inspection of the `con-bill-6mon-YYYYMMDD.csv` exports
 produced by `data/sql/contribution.sql` (Query 2 — submit-channel roll-up).
 
@@ -30,7 +33,16 @@ No server, no install. Charts need internet (Chart.js **and** D3 via CDN); table
 ## Repository layout
 
 ```
-index.html              # the app — sidebar nav + tabbed content; Chart.js + D3 via CDN
+index.html              # markup + <script>/<link> bootstrap (loads data.js → js/*.js in order)
+styles.css              # all CSS (was inline <style>; extracted, no behavior change)
+js/                     # vanilla-JS modules, plain <script> tags (no ES modules → runs from file://)
+  core.js               # palette, format, state, data access            (loads 1st)
+  charts.js             # Chart.js/D3 chart + table infrastructure
+  tabs-summary.js       # generic dimension renderer + Summary tab
+  tabs-detail.js        # Channel … Trustee Portfolio detail tabs
+  tabs-settings.js      # Settings + Theme + preferences
+  tabs-alloc.js         # Contribution Pend Tagging + Money Allocation
+  app.js                # scope bar, TABS dispatch, nav, init             (loads last)
 data.js                 # generated dataset (committed; regenerate via scripts/)
 scripts/
   build_data.py             # CSV -> data.js (type-coerce, latest-6-month window)
@@ -189,9 +201,15 @@ Deliberately *not* the generic AI look (no Inter, no purple-on-white gradients).
 
 ## Conventions
 
-- Match the surrounding code style. The app is one vanilla-JS module in
-  `index.html` — no build step, no framework.
-- Keep the data layer (`data.js`) and the view layer (`index.html`) separate;
+- Match the surrounding code style. The app is vanilla JS split across
+  `index.html` + `styles.css` + `js/*.js`, loaded as plain `<script>` tags in
+  **dependency order** (`index.html` lists them: `data.js → core → charts →
+  tabs-* → app`). No build step, no framework, no ES modules — so it still runs
+  from `file://` (double-click). Preserve that load order when editing: the
+  foundational consts are in `core.js`, and `app.js` (TABS dispatch + `init`)
+  loads last because `TABS` references the render functions defined in the
+  `tabs-*.js` files.
+- Keep the data layer (`data.js`) and the view layer (`index.html` + `js/`) separate;
   re-run `build_data.py` after any CSV change, never hand-edit `data.js`.
 - When adding a tab, add its `docs/NN-*.md` spec first and follow it.
 - Charts follow the dataviz method: pick the form by the data's job, assign color
