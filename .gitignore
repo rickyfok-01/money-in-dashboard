@@ -16,6 +16,10 @@ data/con-bill-*.csv
 data/con-pym-*.csv
 data/constant-scheme-info.xlsx
 data/contribution-allocation.xlsx
+data/dda-30day-*.csv
+data/dda-aging-*.csv
+data/ddi-30day-*.csv
+data/ddi-aging-*.csv
 
 # Stray files carried over from a separate Vite project — never commit. (STATUS.md §5.4)
 data/CLAUDE.md
