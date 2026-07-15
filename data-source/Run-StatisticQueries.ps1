@@ -3,8 +3,31 @@
 # Executes 7 statistic queries, exports to CSV, zips results
 # ==========================================
 
+# Fail fast: native cmdlets (Export-Csv, Compress-Archive, Remove-Item) emit
+# NON-terminating errors by default, which bypass catch blocks and let a failed
+# step be counted as success. 'Stop' promotes them to terminating errors so the
+# catches below actually fire and failures are reported honestly.
+$ErrorActionPreference = 'Stop'
+
 Import-Module "$PSScriptRoot\Modules\Config.psm1" -Force
 Import-Module "$PSScriptRoot\Modules\Oracle.psm1" -Force
+
+# Timestamped, severity-tagged logger. Every line carries HH:mm:ss + level so a
+# transcript shows when each step ran; Start-Transcript still captures it (it
+# calls Write-Host under the hood) and the console keeps its color.
+function Write-Log {
+    param(
+        [Parameter(Position = 0)][string]$Message,
+        [ValidateSet('INFO', 'SUCCESS', 'WARNING', 'ERROR')][string]$Level = 'INFO'
+    )
+    $Color = switch ($Level) {
+        'INFO'    { 'Cyan' }
+        'SUCCESS' { 'Green' }
+        'WARNING' { 'Yellow' }
+        'ERROR'   { 'Red' }
+    }
+    Write-Host ("[{0}] [{1}] {2}" -f (Get-Date -Format 'HH:mm:ss'), $Level, $Message) -ForegroundColor $Color
+}
 
 # Load configuration
 $Config = Import-EnvConfig -EnvFile (Join-Path $PSScriptRoot ".env")
@@ -21,13 +44,17 @@ $OutputDir = Join-Path $PSScriptRoot "data"
 $LogFile = Join-Path $LogDir "$DateStr.log"
 $ZipFile = Join-Path $OutputDir "$DateStr.zip"
 
+# Ensure output dirs exist (idempotent). With ErrorActionPreference=Stop, a
+# missing log dir would otherwise terminate the run at Start-Transcript.
+foreach ($d in @($OutputDir, $TempDir, $LogDir)) {
+    New-Item -ItemType Directory -Path $d -Force | Out-Null
+}
+
 # Start logging
 Start-Transcript -Path $LogFile -Append
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Starting statistic queries execution" -ForegroundColor Cyan
-Write-Host "Date: $DateStr" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+$RunStart = [System.Diagnostics.Stopwatch]::StartNew()
+Write-Log "Starting statistic queries execution (date=$DateStr)"
 
 # Define queries
 $Queries = @(
@@ -73,7 +100,7 @@ try {
     $Connection = Connect-OracleDatabase -ConnectionString $ConnStr -DllPath $Config['ORACLE_DLL_PATH']
 }
 catch {
-    Write-Host "[ERROR] Failed to connect to Oracle database: $_" -ForegroundColor Red
+    Write-Log "Failed to connect to Oracle database: $_" -Level ERROR
     Stop-Transcript
     exit 1
 }
@@ -83,15 +110,16 @@ $InitSql = $Config['DB_INIT_SQL']
 if (-not [string]::IsNullOrWhiteSpace($InitSql)) {
     try {
         Invoke-OracleCommand -Connection $Connection -Sql $InitSql
-        Write-Host "[INFO] Session initialized: $InitSql" -ForegroundColor Cyan
+        Write-Log "Session initialized: $InitSql"
     }
     catch {
-        Write-Host "[WARNING] DB_INIT_SQL failed (skipped): $_" -ForegroundColor Yellow
+        Write-Log "DB_INIT_SQL failed (skipped): $_" -Level WARNING
     }
 }
 
 $SuccessCount = 0
 $FailCount = 0
+$Failures = @()          # [PSCustomObject]{ Id, Stage, Error } per failure — surfaced in the summary
 $GeneratedCsvFiles = @()
 
 try {
@@ -101,7 +129,8 @@ try {
         $OutputFileName = $Query.OutputFilePattern -f $DateStr
         $OutputFilePath = Join-Path $TempDir $OutputFileName
 
-        Write-Host "`n--- Processing $QueryId ---" -ForegroundColor White
+        Write-Log "--- Processing $QueryId ---"
+        $QStart = [System.Diagnostics.Stopwatch]::StartNew()
 
         # Read SQL file
         try {
@@ -114,26 +143,28 @@ try {
             $Sql = $Sql.TrimEnd(';')
         }
         catch {
-            Write-Host "[ERROR] Failed to read SQL file for $QueryId : $_" -ForegroundColor Red
+            Write-Log "Failed to read SQL file for $QueryId : $_" -Level ERROR
+            $Failures += [PSCustomObject]@{ Id = $QueryId; Stage = 'read'; Error = "$_" }
             $FailCount++
             continue
         }
 
         # Execute query
         try {
-            Write-Host "[INFO] Executing query..." -ForegroundColor Cyan
+            Write-Log "Executing query..."
             $Results = Invoke-OracleQuery -Connection $Connection -Sql $Sql
-            Write-Host "[INFO] Query returned $($Results.Count) rows" -ForegroundColor Green
+            Write-Log "Query returned $($Results.Count) rows" -Level SUCCESS
         }
         catch {
-            Write-Host "[ERROR] Failed to execute query for $QueryId : $_" -ForegroundColor Red
+            Write-Log "Failed to execute query for $QueryId : $_" -Level ERROR
+            $Failures += [PSCustomObject]@{ Id = $QueryId; Stage = 'execute'; Error = "$_" }
             $FailCount++
             continue
         }
 
         # Export to CSV
         try {
-            Write-Host "[INFO] Exporting to CSV: $OutputFilePath" -ForegroundColor Cyan
+            Write-Log "Exporting to CSV: $OutputFilePath"
             $Results | ForEach-Object {
                 $Obj = New-Object PSObject
                 foreach ($Key in $_.Keys) {
@@ -146,11 +177,13 @@ try {
                 $Obj
             } | Export-Csv -Path $OutputFilePath -NoTypeInformation -Encoding UTF8
             $GeneratedCsvFiles += $OutputFilePath
-            Write-Host "[SUCCESS] CSV generated: $OutputFilePath" -ForegroundColor Green
+            $QStart.Stop()
+            Write-Log ("CSV generated: {0} ({1} rows in {2}s)" -f $OutputFilePath, $Results.Count, [math]::Round($QStart.Elapsed.TotalSeconds, 1)) -Level SUCCESS
             $SuccessCount++
         }
         catch {
-            Write-Host "[ERROR] Failed to export CSV for $QueryId : $_" -ForegroundColor Red
+            Write-Log "Failed to export CSV for $QueryId : $_" -Level ERROR
+            $Failures += [PSCustomObject]@{ Id = $QueryId; Stage = 'export'; Error = "$_" }
             $FailCount++
             continue
         }
@@ -158,23 +191,21 @@ try {
 
     # Zip the files
     if ($SuccessCount -gt 0) {
-        Write-Host "`n========================================" -ForegroundColor Cyan
-        Write-Host "Creating zip file: $ZipFile" -ForegroundColor Cyan
-        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Log "Creating zip file: $ZipFile"
 
         try {
             # Remove existing zip if exists
             if (Test-Path $ZipFile) {
                 Remove-Item $ZipFile -Force
-                Write-Host "[INFO] Removed existing zip file" -ForegroundColor Yellow
+                Write-Log "Removed existing zip file" -Level WARNING
             }
 
             # Create zip
             Compress-Archive -Path $GeneratedCsvFiles -DestinationPath $ZipFile -Force
-            Write-Host "[SUCCESS] Zip file created: $ZipFile" -ForegroundColor Green
+            Write-Log "Zip file created: $ZipFile" -Level SUCCESS
         }
         catch {
-            Write-Host "[ERROR] Failed to create zip file: $_" -ForegroundColor Red
+            Write-Log "Failed to create zip file: $_" -Level ERROR
         }
     }
 }
@@ -182,23 +213,25 @@ finally {
     Disconnect-OracleDatabase $Connection
 
     # Clean up temp files
-    Write-Host "`n========================================" -ForegroundColor Cyan
-    Write-Host "Cleaning up temp directory" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Log "Cleaning up temp directory"
     try {
         Get-ChildItem -Path $TempDir -File | Remove-Item -Force
-        Write-Host "[SUCCESS] Temp directory cleaned" -ForegroundColor Green
+        Write-Log "Temp directory cleaned" -Level SUCCESS
     }
     catch {
-        Write-Host "[WARNING] Failed to clean temp directory: $_" -ForegroundColor Yellow
+        Write-Log "Failed to clean temp directory: $_" -Level WARNING
     }
 
     # Summary
-    Write-Host "`n========================================" -ForegroundColor Cyan
-    Write-Host "Execution Summary" -ForegroundColor Cyan
-    Write-Host "Success: $SuccessCount" -ForegroundColor Green
-    Write-Host "Failed: $FailCount" -ForegroundColor $(if ($FailCount -gt 0) { "Red" } else { "Green" })
-    Write-Host "========================================" -ForegroundColor Cyan
+    $RunStart.Stop()
+    $SummaryLevel = if ($FailCount -gt 0) { 'ERROR' } else { 'SUCCESS' }
+    Write-Log ("Execution summary: success={0} failed={1} elapsed={2}s" -f $SuccessCount, $FailCount, [math]::Round($RunStart.Elapsed.TotalSeconds, 1)) -Level $SummaryLevel
+    if ($Failures.Count -gt 0) {
+        Write-Log "Failed queries:" -Level ERROR
+        foreach ($f in $Failures) {
+            Write-Log ("  {0} [{1}]: {2}" -f $f.Id, $f.Stage, $f.Error) -Level ERROR
+        }
+    }
 
     Stop-Transcript
 }
