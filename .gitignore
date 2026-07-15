@@ -14,6 +14,8 @@ pym_data.js
 # regenerate via `python scripts/build_data.py` after any CSV/xlsx change. (STATUS.md §6)
 data/con-bill-*.csv
 data/con-pym-*.csv
+data/dda-*.csv
+data/ddi-*.csv
 data/constant-scheme-info.xlsx
 data/contribution-allocation.xlsx
 
