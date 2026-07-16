@@ -32,6 +32,11 @@ OUT = os.path.join(ROOT, "data.js")
 
 GLOB = os.path.join(DATA_DIR, "con-bill-6mon-*.csv")
 PYM_GLOB = os.path.join(DATA_DIR, "con-pym-6mon-*.csv")
+AO_AGING_GLOB = os.path.join(DATA_DIR, "con-pym-ao-aging-*.csv")
+DDI30_GLOB = os.path.join(DATA_DIR, "ddi-30day-*.csv")
+DDI_AGING_GLOB = os.path.join(DATA_DIR, "ddi-aging-*.csv")
+DDA30_GLOB = os.path.join(DATA_DIR, "dda-30day-*.csv")
+DDA_AGING_GLOB = os.path.join(DATA_DIR, "dda-aging-*.csv")
 NAMES_XLSX = os.path.join(DATA_DIR, "constant-scheme-info.xlsx")
 
 # Canonical status lifecycle order (forward path first, then edge/terminal).
@@ -128,6 +133,141 @@ def read_pym():
                 snaps.add(row["s"])
                 months.add(row["ym"])
     return rows, snaps, months
+
+
+def read_ao_aging():
+    """Read con-pym-ao-aging-*.csv -> list of rows.
+    Each row: snapshot, tr, sc, chan, tag, pm, total, day_00_06..day_31_more.
+    """
+    rows, snaps = [], set()
+    for p in sorted(glob.glob(AO_AGING_GLOB)):
+        snap_file = snap_from_name(p)
+        with open(p, newline="", encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
+                if not snap:
+                    continue
+                row = {
+                    "s": snap,
+                    "tr": (r.get("TR_CODE") or "").strip(),
+                    "sc": (r.get("SCHEME_CODE") or "").strip(),
+                    "chan": (r.get("AV_PAY_CHANNEL_CODE") or "").strip(),
+                    "tag": (r.get("AV_TAG_STATUS_CODE") or "").strip(),
+                    "pm": (r.get("PAY_METHOD_CODE") or "").strip(),
+                    "total": to_int(r.get("TOTAL")),
+                    "d00_06": to_int(r.get("DAY_00_06")),
+                    "d07_14": to_int(r.get("DAY_07_14")),
+                    "d15_21": to_int(r.get("DAY_15_21")),
+                    "d22_30": to_int(r.get("DAY_22_30")),
+                    "d31": to_int(r.get("DAY_31_MORE")),
+                }
+                rows.append(row)
+                snaps.add(row["s"])
+    return rows, sorted(snaps)
+
+
+def read_ddi():
+    """Read ddi-30day-*.csv and ddi-aging-*.csv -> (last30, aging) row lists."""
+    last30, aging = [], []
+    snaps30, snapsAging = set(), set()
+
+    for p in sorted(glob.glob(DDI30_GLOB)):
+        snap_file = snap_from_name(p)
+        with open(p, newline="", encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
+                if not snap:
+                    continue
+                row = {
+                    "s": snap,
+                    "tr": (r.get("TR_CODE") or "").strip(),
+                    "sc": (r.get("SCHEME_CODE") or "").strip(),
+                    "at": (r.get("SHORT_CODE") or "").strip(),
+                    "date": (r.get("DDI_REQUEST_DATE") or "").strip(),
+                    "total": to_int(r.get("COUNT")),
+                    "submitted": to_int(r.get("SUBMITTED_TO_BANK")),
+                    "success": to_int(r.get("SUCCESS")),
+                    "rejected": to_int(r.get("REJECTED")),
+                }
+                last30.append(row)
+                snaps30.add(row["s"])
+
+    for p in sorted(glob.glob(DDI_AGING_GLOB)):
+        snap_file = snap_from_name(p)
+        with open(p, newline="", encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
+                if not snap:
+                    continue
+                row = {
+                    "s": snap,
+                    "tr": (r.get("TR_CODE") or "").strip(),
+                    "sc": (r.get("SCHEME_CODE") or "").strip(),
+                    "at": (r.get("SHORT_CODE") or "").strip(),
+                    "total": to_int(r.get("TOTAL")),
+                    "d00_06": to_int(r.get("DAY_00_06")),
+                    "d07_14": to_int(r.get("DAY_07_14")),
+                    "d15_21": to_int(r.get("DAY_15_21")),
+                    "d22_30": to_int(r.get("DAY_22_30")),
+                    "d31": to_int(r.get("DAY_31_MORE")),
+                }
+                aging.append(row)
+                snapsAging.add(row["s"])
+
+    return last30, aging, sorted(snaps30), sorted(snapsAging)
+
+
+def read_dda():
+    """Read dda-30day-*.csv and dda-aging-*.csv -> (last30, aging) row lists."""
+    last30, aging = [], []
+    snaps30, snapsAging = set(), set()
+
+    for p in sorted(glob.glob(DDA30_GLOB)):
+        snap_file = snap_from_name(p)
+        with open(p, newline="", encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
+                if not snap:
+                    continue
+                row = {
+                    "s": snap,
+                    "tr": (r.get("TR_CODE") or "").strip(),
+                    "sc": (r.get("SCHEME_CODE") or "").strip(),
+                    "at": (r.get("SHORT_CODE") or "").strip(),
+                    "total": to_int(r.get("TOTAL")),
+                    "submitted_pig": to_int(r.get("SUBMITTED_TO_PIG")),
+                    "submitted_bank": to_int(r.get("SUBMITTED_TO_BANK")),
+                    "active": to_int(r.get("ACTIVE")),
+                    "inactive": to_int(r.get("INACTIVE")),
+                    "rejected": to_int(r.get("REJECTED")),
+                    "suspend": to_int(r.get("SUSPEND")),
+                }
+                last30.append(row)
+                snaps30.add(row["s"])
+
+    for p in sorted(glob.glob(DDA_AGING_GLOB)):
+        snap_file = snap_from_name(p)
+        with open(p, newline="", encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
+                if not snap:
+                    continue
+                row = {
+                    "s": snap,
+                    "tr": (r.get("TR_CODE") or "").strip(),
+                    "sc": (r.get("SCHEME_CODE") or "").strip(),
+                    "at": (r.get("SHORT_CODE") or "").strip(),
+                    "total": to_int(r.get("TOTAL")),
+                    "d00_06": to_int(r.get("DAY_00_06")),
+                    "d07_14": to_int(r.get("DAY_07_14")),
+                    "d15_21": to_int(r.get("DAY_15_21")),
+                    "d22_30": to_int(r.get("DAY_22_30")),
+                    "d31": to_int(r.get("DAY_31_MORE")),
+                }
+                aging.append(row)
+                snapsAging.add(row["s"])
+
+    return last30, aging, sorted(snaps30), sorted(snapsAging)
 
 
 def read_names():
@@ -236,6 +376,16 @@ def main() -> int:
         "months": sorted(m for m in pym_months if m and m in keep),
         "rows": pym_rows,
     }
+
+    # AO aging dataset.
+    ao_aging_rows, ao_aging_snaps = read_ao_aging()
+
+    # DDI datasets.
+    ddi30_rows, ddi_aging_rows, ddi30_snaps, ddi_aging_snaps = read_ddi()
+
+    # DDA datasets.
+    dda30_rows, dda_aging_rows, dda30_snaps, dda_aging_snaps = read_dda()
+
     names = read_names()
 
     # Ordered dimension lists.
@@ -266,11 +416,16 @@ def main() -> int:
         "channels": CHANNELS,
         "rows": rows,
         "pym": pym,
+        "aoAging": {"snapshots": ao_aging_snaps, "rows": ao_aging_rows},
+        "ddi30": {"snapshots": ddi30_snaps, "rows": ddi30_rows},
+        "ddiAging": {"snapshots": ddi_aging_snaps, "rows": ddi_aging_rows},
+        "dda30": {"snapshots": dda30_snaps, "rows": dda30_rows},
+        "ddaAging": {"snapshots": dda_aging_snaps, "rows": dda_aging_rows},
         "names": names,
     }
 
     js = "/* AUTO-GENERATED by scripts/build_data.py — do not edit. */\n"
-    js += "/* Source: data/con-bill-6mon-*.csv (Query 2) + data/con-pym-6mon-*.csv (payments) + data/constant-scheme-info.xlsx (names) */\n"
+    js += "/* Source: con-bill-6mon (SQL-05) + con-pym-6mon (SQL-06) + con-pym-ao-aging (SQL-07) + ddi-* (SQL-01/02) + dda-* (SQL-03/04) + constant-scheme-info.xlsx */\n"
     js += "const DATA = " + json.dumps(data, separators=(",", ":")) + ";\n"
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(js)
@@ -283,6 +438,11 @@ def main() -> int:
     print(f"  statuses  : {len(data['statuses'])}  modes: {len(data['modes'])}  "
           f"freqs: {len(data['freqs'])}  acctTypes: {len(data['acctTypes'])}")
     print(f"  pym rows  : {len(pym_rows)}  snapshots: {pym['snapshots']}")
+    print(f"  aoAging   : {len(ao_aging_rows)}  snapshots: {ao_aging_snaps}")
+    print(f"  ddi30     : {len(ddi30_rows)}  snapshots: {ddi30_snaps}")
+    print(f"  ddiAging  : {len(ddi_aging_rows)}  snapshots: {ddi_aging_snaps}")
+    print(f"  dda30     : {len(dda30_rows)}  snapshots: {dda30_snaps}")
+    print(f"  ddaAging  : {len(dda_aging_rows)}  snapshots: {dda_aging_snaps}")
     print(f"  names     : {len(names['scheme'])} schemes, {len(names['trustee'])} trustees")
     return 0
 

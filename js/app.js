@@ -206,6 +206,8 @@ const TABS=[
     render:renderSettings},
   {id:"theme",n:"24",title:"Theme",sub:"Choose a visual theme for the dashboard.",modes:["current"],noScope:true,
     render:renderTheme},
+  {id:"summary-v2",n:"25",title:"Summary V2",sub:"Compact 3-category overview — Contribution Bill, Payment, Direct Debit — all in one page.",modes:["current","compare","trend"],
+    cap:"Summary V2",render:renderSummaryV2},
 ];
 
 /* ============================================================
@@ -242,7 +244,7 @@ function render(){
    survive across sessions). */
 const NAV_KEY_PREFIX = "moneyin.nav.group.";
 const NAV_GROUPS = [
-  {key:"overview",  label:"Overview",      locked:true,  ids:["summary","pend-tagging","money-allocation"]},
+  {key:"overview",  label:"Overview",      locked:true,  ids:["summary","summary-v2","pend-tagging","money-allocation"]},
   {key:"dimensions",label:"Dimensions",    locked:false, ids:["scheme-scorecard","status-lifecycle","trustee","contribution-mode","frequency","account-type","submit-channel"]},
   {key:"xanalysis", label:"Cross-analysis",locked:false, ids:["status-channel","trustee-channel","frequency-status"]},
   {key:"perf",      label:"Performance",   locked:false, ids:["ontime-performance","completion","submit-funnel-coverage"]},
@@ -328,7 +330,7 @@ function setupSidebarToggle(){
 
   const isOverview=()=>{
     const id=state.tab;
-    return id==="summary" || id==="pend-tagging" || id==="money-allocation";
+    return id==="summary" || id==="summary-v2" || id==="pend-tagging" || id==="money-allocation";
   };
   const defaultCollapsed=()=>!isOverview();
   const apply=(collapsed)=>{
