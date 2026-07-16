@@ -31,14 +31,7 @@
         <div class="brand-mark">Money In <span class="wm-snap">Monitoring</span></div>
         <div class="brand-sub">MPF bill &amp; submit-channel</div>
       </div>
-      <div class="brand-toggle">
-        <button type="button" id="menuToggle" class="menu-toggle" aria-label="Hide menu"
-                aria-controls="sidebar" aria-pressed="false" title="Hide menu">
-          <span class="bars" aria-hidden="true">
-            <i></i><i></i><i class="bar3"></i>
-          </span>
-        </button>
-      </div>
+
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="nav-foot">
@@ -50,27 +43,21 @@
 
   <main class="main">
     <header class="masthead">
-      <div>
-        <h1 id="pageTitle">Summary</h1>
-        <p class="sub" id="pageSub"></p>
-      </div>
-      <div class="masthead-actions">
-        <!-- Snapshot / scheme / month dataset chips. Live next to the
-             "Current view" pill so the user can read scope (which snapshot,
-             how many schemes, how many months) without scrolling back to
-             the brand row in the sidebar. -->
-        <div class="brand-meta" id="brandMeta"></div>
-        <div class="mode-pill" id="modePill">Current view</div>
-        <!-- Fallback menu-toggle: only visible when the sidebar is collapsed.
-             The primary instance lives in the brand row at the top of the
-             menu (right-hand side). One .menu-toggle per state keeps both
-             trivially synchronised through the same DOM id. -->
-        <button type="button" id="menuToggleFallback" class="menu-toggle" aria-label="Show menu"
-                aria-controls="sidebar" aria-pressed="true" title="Show menu">
+      <div class="masthead-left">
+        <button type="button" id="menuToggle" class="menu-toggle" aria-label="Hide menu"
+                aria-controls="sidebar" aria-pressed="false" title="Hide menu">
           <span class="bars" aria-hidden="true">
             <i></i><i></i><i class="bar3"></i>
           </span>
         </button>
+        <div>
+          <h1 id="pageTitle">Summary</h1>
+          <p class="sub" id="pageSub"></p>
+        </div>
+      </div>
+      <div class="masthead-actions">
+        <div class="brand-meta" id="brandMeta"></div>
+        <div class="mode-pill" id="modePill">Current view</div>
       </div>
     </header>
 

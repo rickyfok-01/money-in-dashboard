@@ -18,7 +18,7 @@ with billable as (
   join cmn_scheme           n1 on c1.scheme_code = n1.scheme_code
   join cmn_trustee          n2 on n2.id = n1.tr_uuid
   where
-      c1.contr_period_start_date >= add_months(trunc(sysdate), -5)
+      c1.contr_period_start_date >= add_months(trunc(sysdate), -6)
   and c1.contr_period_start_date <= add_months(trunc(sysdate),  0)
 ),
 per_bill_submit as (

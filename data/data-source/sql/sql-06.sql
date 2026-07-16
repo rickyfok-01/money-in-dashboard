@@ -29,7 +29,7 @@ left join (
 ) susp
        on susp.receipt_ref_no = p1.receipt_ref_no
       and susp.scheme_code    = n1.scheme_code
-where   p1.creation_date >= add_months(trunc(sysdate), -5)
+where   p1.creation_date >= add_months(trunc(sysdate), -6)
    and  p1.creation_date <  trunc(sysdate)
    and  p1.tran_nature = 'CONTRIBUTION'
    and  p1.av_tag_status_code not in

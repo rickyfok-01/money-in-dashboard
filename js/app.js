@@ -219,7 +219,7 @@ function go(tabId,drill){
   if(t&&!t.modes.includes(state.mode))state.mode=t.modes[0];
   document.body.dataset.mode=state.mode;
   renderNav();render();
-  const tgt=$("#content"); if(tgt&&tgt.scrollIntoView)tgt.scrollIntoView({block:"start"});
+  window.scrollTo(0,0);
 }
 function render(){
   clearCharts();
@@ -322,7 +322,6 @@ function syncSchemes(){ if(window.__schemePicker) window.__schemePicker.refresh(
    between tabs no longer surprises the user. */
 function setupSidebarToggle(){
   const btn=$("#menuToggle");
-  const fb =$("#menuToggleFallback");
   if(!btn)return;
   const KEY_STATE="moneyin.sidebar.collapsed";
   const KEY_USER ="moneyin.sidebar.userSet";
@@ -332,16 +331,11 @@ function setupSidebarToggle(){
     return id==="summary" || id==="pend-tagging" || id==="money-allocation";
   };
   const defaultCollapsed=()=>!isOverview();
-  /* Keep both .menu-toggle instances (the one in the brand row, and the
-     masthead fallback) in lockstep: same aria-pressed, same label/title. */
-  const allBtns = ()=>[btn, fb].filter(Boolean);
   const apply=(collapsed)=>{
     document.body.dataset.collapsed = collapsed ? "1" : "0";
-    allBtns().forEach(b=>{
-      b.setAttribute("aria-pressed", collapsed ? "true" : "false");
-      b.setAttribute("aria-label", collapsed ? "Show menu" : "Hide menu");
-      b.setAttribute("title",     collapsed ? "Show menu" : "Hide menu");
-    });
+    btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
+    btn.setAttribute("aria-label", collapsed ? "Show menu" : "Hide menu");
+    btn.setAttribute("title",     collapsed ? "Show menu" : "Hide menu");
   };
   // First load — fall back to tab-based default if the user has never toggled.
   let initialCollapsed;
@@ -363,7 +357,6 @@ function setupSidebarToggle(){
     } catch(_) {}
   };
   btn.addEventListener("click", onClick);
-  if(fb) fb.addEventListener("click", onClick);
 
   // When the user navigates between tabs, re-apply the default UNLESS the
   // user has already expressed an explicit preference (in which case their

@@ -155,11 +155,6 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .brand-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .brand-meta .chip{font-size:.66rem;padding:1px 8px}
 
-/* Brand row hosts the menu-toggle on the right-hand side so the hide menu
-   control sits at the top of the menu itself, not in the page masthead. */
-.brand-toggle{flex:none;align-self:flex-start}
-.brand-toggle .menu-toggle{margin-top:2px}
-
 .chip{font-family:var(--mono);font-size:.68rem;background:var(--surface);border:1px solid var(--hairline);
   border-radius:999px;padding:2px 8px;color:var(--ink-2)}
 .nav{padding:14px 12px 8px;flex:1}
@@ -195,24 +190,19 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .masthead h1{font-family:var(--font-display);font-weight:600;font-size:1.7rem;letter-spacing:-.5px;line-height:1}
 .masthead h1 em{font-style:italic;font-weight:500;color:var(--accent)}
 .masthead .sub{margin-top:6px;color:var(--ink-2);font-size:.85rem;max-width:64ch}
+.masthead-left{display:flex;align-items:center;gap:12px;min-width:0}
+.masthead-left .menu-toggle{margin-left:-2px}
 .masthead .mode-pill{font-family:var(--mono);font-size:.7rem;color:var(--ink-2);
   background:var(--surface);border:1px solid var(--hairline);border-radius:999px;padding:4px 10px}
 .masthead-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
-/* Two .menu-toggle instances — one in the brand row (top of menu), one in
-   the masthead (fallback when the sidebar is collapsed). Only one is
-   visible at a time, switched via [data-collapsed] on <body>. */
-#menuToggleFallback{display:none}
-body[data-collapsed="1"] #menuToggleFallback{display:inline-flex}
-
-/* Sidebar toggle — now sits at the top of the menu (right-hand side of the
-   brand row). When the sidebar is collapsed the icon is "open" (≡), when
-   visible it is "close" (×). When collapsed, the sidebar's contents (incl.
-   the brand) are hidden — the same .menu-toggle is re-mounted in the
-   masthead as a fallback so the user can re-open the menu). */
+/* Sidebar toggle — lives in the masthead left area, always visible.
+   When the sidebar is collapsed the icon is "open" (≡), when visible it is
+   "close" (×). */
 .menu-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;
   padding:0;background:var(--surface);border:1px solid var(--hairline);border-radius:8px;
-  color:var(--ink);cursor:pointer;transition:background .12s ease, border-color .12s ease}
+  color:var(--ink);cursor:pointer;transition:background .12s ease, border-color .12s ease;
+  flex:none}
 .menu-toggle:hover{background:var(--surface-2);border-color:var(--rule)}
 .menu-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .menu-toggle .bars{display:inline-block;width:16px;height:12px;position:relative}
@@ -220,7 +210,7 @@ body[data-collapsed="1"] #menuToggleFallback{display:inline-flex}
   border-radius:2px;transition:transform .18s ease, top .18s ease, opacity .12s ease}
 .menu-toggle .bars i:nth-child(1){top:0}
 .menu-toggle .bars i:nth-child(2){top:5px}
-.menu-toggle .bars .bar3{transition:transform .18s ease, top .18s ease}
+.menu-toggle .bars .bar3{}
 .menu-toggle[aria-pressed="true"] .bars i:nth-child(1){top:5px;transform:rotate(45deg)}
 .menu-toggle[aria-pressed="true"] .bars i:nth-child(2){opacity:0}
 .menu-toggle[aria-pressed="true"] .bars .bar3{top:5px;transform:rotate(-45deg)}
