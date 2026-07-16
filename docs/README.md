@@ -31,6 +31,7 @@ that every tab reuses.
 | `19-outliers.md` | tab 18 | schemes >1σ from the peer mean |
 | `20-volume-tiers.md` | tab 19 | XS…XL volume tiers |
 | `21-trustee-portfolio.md` | tab 20 | trustee breadth & concentration |
+| `25-summary-v2.md` | tab 25 | **Summary V2** — compact 3-category overview (bill, payment, direct debit) |
 
 ## Build order
 

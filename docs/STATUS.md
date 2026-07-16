@@ -3,7 +3,7 @@
 > **Read this first in a zero-context session.** It is the *current-state snapshot*
 > (what is done, how to resume, where the traps are). For the architecture, design
 > system, and full tab catalogue, read **`CLAUDE.md`** — this file does not repeat
-> it. Last updated 2026-07-10.
+> it. Last updated 2026-07-16.
 
 ---
 
@@ -11,9 +11,9 @@
 
 `empf-dashboard/contribution` is a **single self-contained HTML dashboard**
 (`index.html`, plain vanilla JS, no build step, Chart.js `4.4.7` + D3 `7` via CDN).
-Two source CSV families + one xlsx are folded by `scripts/build_data.py` into
-`data.js` (`const DATA = {...}`), which `index.html` loads. There are **25 tabs**
-(00–24). The dashboards were **merged onto `index.html` on 2026-07-10**
+Seven source CSV families + one xlsx are folded by `scripts/build_data.py` into
+`data.js` (`const DATA = {...}`), which `index.html` loads. There are **26 tabs**
+(00–25). The dashboards were **merged onto `index.html` on 2026-07-10**
 (`admin.html` deleted; index wins all conflicts; all admin-only features dropped).
 All work from the recent sessions is **complete and verified**.
 
@@ -41,6 +41,10 @@ All work from the recent sessions is **complete and verified**.
 - Verified end-to-end with a **jsdom smoke harness** (real d3 + Chart.js + data.js):
   0 runtime errors in Current and Compare; switching / snapshot-change / By-toggle
   all re-render cleanly.
+- **Summary V2 tab (25)** — compact 3-category overview page: Contribution Bill,
+  Contribution Payment, Direct Debit. Single-pane no-scroll layout with KPI
+  pills, 3 category cards, and 4 aging-bucket bars. Supports Current / Compare /
+  Trend modes. `build_data.py` extended to load DDI, DDA, and AO-aging CSVs.
 
 ## 3. Run / verify
 
@@ -69,6 +73,10 @@ it catches `ReferenceError`/logic throws, not pixel output):
 | `data.js` | generated dataset (`const DATA`); **never hand-edit** — regenerate via `scripts/build_data.py` |
 | `scripts/build_data.py` | CSVs + xlsx → `data.js`; type-coerces measures, keeps latest 6 YEAR_MONTHs; emits `DATA`, `DATA.pym`, `DATA.names` |
 | `docs/SPEC-money-allocation.md` | requirements + UX/UI spec for tab 02 (mirror of `docs/SPEC-contribution-tagging.md`) |
+| `docs/25-summary-v2.md` | spec for tab 25 — compact 3-category overview |
+| `js/tabs-summary-v2.js` | Summary V2 renderer — bill, payment, direct debit KPIs |
+| `data/con-pym-ao-aging-*.csv` | AO aging data (SQL-07) — `DATA.aoAging` |
+| `data/ddi-*.csv`, `data/dda-*.csv` | DDI/DDA data (SQL-01/02/03/04) — `DATA.ddi30`, `DATA.ddiAging`, `DATA.dda30`, `DATA.ddaAging` |
 | `CLAUDE.md` | architecture + tab catalogue + conventions (the authoritative "how to work here") |
 | `docs/` | one spec per tab + `00-architecture.md` (build plan / design system) |
 | `data/con-bill-6mon-*.csv` | bill source (Query 2 of `data/sql/contribution.sql`) |
@@ -145,6 +153,8 @@ of the bill `tone`).
   `TABS.modes` and resurrecting `renderMoneyAllocationTrend`).
 - **Surface `DATA.names`** on the bill tabs (currently only tab 02 renders names;
   the lookup is available globally).
+- **Visual review of Summary V2** — the new compact layout renders in all three modes;
+  may need font-size or spacing tweaks once seen with real data on a 1920×1080 screen.
 - **Clean the stray `.gitignore`** (root + `data/`) of Vite cruft, and decide once
   whether the raw source CSVs belong in the repo — both are tidy-up items, not in
   scope of the current work.

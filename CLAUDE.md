@@ -153,6 +153,7 @@ where meaningful.
 | 22 | Trustee Portfolio | trustee breadth & top-scheme concentration |
 | 23 | Settings | app preferences (display, navigation, dataset, theme) |
 | 24 | Theme | choose a visual theme |
+| 25 | Summary V2 | compact 3-category overview — bill, payment, direct debit (no scroll) |
 
 Each tab has its own spec in `docs/`.
 
