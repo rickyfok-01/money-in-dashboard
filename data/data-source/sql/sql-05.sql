@@ -20,6 +20,7 @@ with billable as (
   where
       c1.contr_period_start_date >= add_months(trunc(sysdate), -6)
   and c1.contr_period_start_date <= add_months(trunc(sysdate),  0)
+  and c1.last_updated_by not in ('00000000000000000000000000000000|CAS_MIG_CORE')
 ),
 per_bill_submit as (
   select /*+ no_merge parallel(c2 4) */
