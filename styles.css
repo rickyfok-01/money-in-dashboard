@@ -742,6 +742,28 @@ table.alloc tbody td.tone-red{background:rgba(239,68,68,.07)}
 .sv-buck-lab{opacity:.9;text-shadow:0 1px 2px rgba(0,0,0,.25);padding:0 2px}
 .sv-buck-tot{font-family:var(--mono);font-size:.62rem;color:var(--ink-2);margin-top:2px;text-align:right}
 
+/* chart row — 2 eye-catching Chart.js charts between KPI rib and cards */
+.sv-chart-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+.sv-chart-card{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-sm);padding:8px 10px 6px;animation:fadeUp .42s cubic-bezier(.2,.7,.2,1) both}
+.sv-chart-title{font-size:.62rem;font-weight:600;color:var(--ink-2);margin-bottom:4px;letter-spacing:.02em;
+  text-transform:uppercase}
+.sv-chart-card .chart-wrap{height:150px}
+.sv-chart-card canvas{width:100%!important;height:100%!important}
+
+/* compare chart row */
+.sv-comp-chart-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}
+.sv-comp-chart-row .chart-wrap{height:140px}
+
+/* trend DD section — 4 mini charts in a 2x2 grid */
+.sv-dd-trend{margin:8px 0}
+.sv-dd-host{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-sm);padding:8px 10px 8px}
+.sv-dd-inner{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.sv-dd-col{display:flex;flex-direction:column;gap:2px}
+.sv-dd-stats{font-family:var(--mono);font-size:.7rem;color:var(--ink-2);margin-bottom:2px}
+.sv-dd-col .chart-wrap{width:100%}
+
 /* note */
 .sv-note{font-size:.68rem;color:var(--ink-2);background:var(--surface-2);border:1px dashed var(--rule);
   border-radius:var(--radius-sm);padding:5px 10px;margin:4px 0}
@@ -752,8 +774,13 @@ table.alloc tbody td.tone-red{background:rgba(239,68,68,.07)}
   .sv-rib{grid-template-columns:repeat(3,1fr)}
   .sv-card-row{grid-template-columns:1fr}
   .sv-buck-row{grid-template-columns:repeat(2,1fr)}
+  .sv-chart-row{grid-template-columns:1fr}
+  .sv-comp-chart-row{grid-template-columns:1fr}
+  .sv-dd-inner{grid-template-columns:1fr}
 }
 @media(max-width:680px){
   .sv-rib{grid-template-columns:repeat(2,1fr)}
   .sv-buck-row{grid-template-columns:1fr}
+  .sv-chart-row .chart-wrap{height:120px}
+  .sv-comp-chart-row .chart-wrap{height:120px}
 }
