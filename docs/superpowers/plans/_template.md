@@ -26,6 +26,11 @@ State at branch: next free tab = **{NN}**. `TABS` registry at `js/app.js:~131`,
 
 ---
 
+**Iteration kind:** {**feature** = ships new tab(s) | **audit/hygiene** = no new tab}. If
+audit/hygiene (Pattern `—`), replace §2 Data contract / §3 Tab pattern / §4 Files-to-touch /
+§5 UX with an **audit/hygiene task block** (Tasks with checkbox Steps + `Run:`/`Expected:`) —
+see `docs/archive/iter-01-bill-audit/handoff.md` as the worked example.
+
 **Goal:** {one sentence — the user question this iteration answers}
 
 **Architecture:** {1–3 sentences — what changes structurally, what's reused}
@@ -98,6 +103,7 @@ Guard missing data at renderer top: `if(!DATA.{key}||!DATA.{key}.rows.length){co
 
 ## 6. Acceptance criteria
 
+- [ ] process-reviewer (phase 4) signed off — framework adherence OK (or friction logged for an iter-0 patch)
 - [ ] tab appears as **{NN} {title}** in the right sidebar group
 - [ ] {Current/Compare/Trend} render without `ReferenceError` (jsdom smoke: 0 `onerror`)
 - [ ] {domain}-specific metric computed as ratio of sums; tone bands correct

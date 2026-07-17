@@ -2,7 +2,7 @@
 
 How this dashboard is built one iteration at a time. The **superpowers plugin**
 (`superpowers@claude-plugins-official`, already enabled in `.claude/settings.json`)
-is the backbone: an iteration is a **superpowers plan** run by a **4-role
+is the backbone: an iteration is a **superpowers plan** run by a **5-role
 subagent team**. This doc is the glue that maps the team to the plugin.
 
 > Read `docs/STATUS.md` first to learn *which* iteration is current. This file
@@ -20,12 +20,12 @@ subagent team**. This doc is the glue that maps the team to the plugin.
 | `docs/superpowers/plans/_template.md` | the iteration-plan template | edited in place (rarely) |
 | `docs/superpowers/plans/{date}-iter-NN-*.md` | the **one** current WIP plan | created → `git mv` to archive at close |
 | `docs/archive/iter-NN-{slug}/` | closed iteration: handoff + STATUS snapshot + notes | write-once history |
-| `.claude/agents/{analyst,engineer,reviewer,doc-keeper}.md` | the 4 role subagents | edited in place (rarely) |
+| `.claude/agents/{analyst,engineer,reviewer,process-reviewer,doc-keeper}.md` | the 5 role subagents | edited in place (rarely) |
 | `docs/00-architecture.md`, `AGENTS.md`, `CLAUDE.md` | durable foundation + traps | edited in place (never archived) |
 
 ---
 
-## 2. Iteration lifecycle — 4 phases, 4 subagents
+## 2. Iteration lifecycle — 5 phases, 5 subagents
 
 One iteration = the plan at `docs/superpowers/plans/{date}-iter-NN-{slug}.md`,
 run end to end by these roles. The **lead** is the driving session (ideally a
@@ -37,20 +37,25 @@ hand off via `SendMessage`; the handoff artifact is named in the table.
 | 1 | **Define** | `analyst` | `superpowers:brainstorming` → `superpowers:writing-plans` | ROADMAP row N + DATA row shapes (`scripts/build_data.py`) | the iteration plan, filled from `_template.md` | every template section complete; line refs grep-verifiable; DATA keys + reference tab cited |
 | 2 | **Build** | `engineer` | `superpowers:subagent-driven-development` (or `superpowers:executing-plans`); `superpowers:test-driven-development` where a unit is testable | the iteration plan | code: `js/tabs-*.js`, `js/app.js` (`TABS`@~131, `NAV_GROUPS`@~246), `index.html` script tag, `styles.css`, `docs/NN-*.md` | jsdom smoke 0 errors; all plan acceptance boxes ticked |
 | 3 | **Verify** | `reviewer` | `superpowers:requesting-code-review` + repo `code-review` skill; `superpowers:verification-before-completion` | the diff + plan's acceptance criteria | review findings (correctness + reuse/efficiency) | 0 blocking findings, or each addressed via a follow-up (engineer runs `superpowers:receiving-code-review`) |
-| 4 | **Close** | `doc-keeper` | `superpowers:finishing-a-development-branch` + procedural | shipped plan + diff + `STATUS.md` | `docs/archive/iter-NN-{slug}/`, `ITERATION-LOG` row, `STATUS` refresh | archive checklist (template §10) complete; `STATUS` ≤60 lines |
+| 4 | **Process Review** | `process-reviewer` | `superpowers:verification-before-completion` | plan + handoffs + diff + `AGILE.md` | process-review report (iteration fixes + framework-friction → iter-0 patch) | 0 blocking process violations; framework friction logged |
+| 5 | **Close** | `doc-keeper` | `superpowers:finishing-a-development-branch` + procedural | shipped plan + diff + `STATUS.md` + process review | `docs/archive/iter-NN-{slug}/`, `ITERATION-LOG` row, `STATUS` refresh | archive checklist (template §10) complete; `STATUS` ≤60 lines |
 
-Loop on blocking findings: Reviewer → `SendMessage(engineer, findings)` → Engineer
-fixes → back to Reviewer until sign-off, then Doc-keeper.
+Loop on blocking **code** findings: Reviewer → `SendMessage(engineer, findings)` →
+Engineer fixes → back to Reviewer until sign-off. Then the **Process Reviewer**
+(phase 4) audits the *process* — read-set discipline, plan quality, handoffs,
+conventions, and whether `AGILE.md` itself held up; its framework-level friction
+accumulates for an iter-0 patch. Then Doc-keeper closes.
 
 ---
 
 ## 3. The team (spawning the roles)
 
 ```
-Agent(subagent_type:"analyst",    name:"analyst")     # phase 1
-Agent(subagent_type:"engineer",   name:"engineer")    # phase 2
-Agent(subagent_type:"reviewer",   name:"reviewer")    # phase 3
-Agent(subagent_type:"doc-keeper", name:"doc-keeper")  # phase 4
+Agent(subagent_type:"analyst",          name:"analyst")          # phase 1 — Define
+Agent(subagent_type:"engineer",         name:"engineer")         # phase 2 — Build
+Agent(subagent_type:"reviewer",         name:"reviewer")         # phase 3 — Verify (code)
+Agent(subagent_type:"process-reviewer", name:"process-reviewer") # phase 4 — Process Review
+Agent(subagent_type:"doc-keeper",       name:"doc-keeper")       # phase 5 — Close
 ```
 
 Each subagent file (`.claude/agents/*.md`) states the superpowers skill it wraps,
@@ -145,6 +150,6 @@ Single-tab iterations use the linear Agent+SendMessage spine — no fan-out.
 
 `AGILE.md` and the `.claude/agents/*` subagents are themselves iter-0 deliverables,
 so iter-0 was written by the main session directly (it cannot be built by the
-team it defines). **Iter-1 is the first full 4-subagent run**, and its Reviewer
-additionally audits this very file ("did it actually guide a fresh agent?"). Gaps
-become an iter-0 patch — `AGILE.md` is versioned and edited in place.
+team it defines). **Iter-1 is the first full 5-subagent run.** The Process Reviewer
+(phase 4) audits this very file every iteration ("did it actually guide a fresh
+agent?"). Gaps become an iter-0 patch — `AGILE.md` is versioned and edited in place.

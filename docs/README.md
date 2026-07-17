@@ -11,14 +11,15 @@ Work proceeds in **iterations** on the **superpowers plugin** backbone (already
 enabled in `.claude/settings.json`). To add or change a tab, run an iteration —
 not a one-off edit:
 
-- `docs/AGILE.md` — the playbook (4-role team: Analyst → Engineer → Reviewer → Doc-keeper; superpowers skills; zero-context protocol; archive rules).
+- `docs/AGILE.md` — the playbook (5-role team: Analyst → Engineer → Reviewer → Process Reviewer → Doc-keeper; superpowers skills; zero-context protocol; archive rules).
 - `docs/ROADMAP.md` — the sequenced backlog (3 data areas × 3 depth levels → 8 iterations).
 - `docs/STATUS.md` — read first in any session; current iteration + next free tab.
 - `docs/ITERATION-LOG.md` — append-only history, one row per iteration.
 - `docs/superpowers/plans/_template.md` — copy this to start an iteration plan.
 
 Start an iteration: copy the template → **Analyst** fills it → **Engineer** builds →
-**Reviewer** verifies → **Doc-keeper** archives. Full detail in `docs/AGILE.md`.
+**Reviewer** verifies (code) → **Process Reviewer** audits the process → **Doc-keeper**
+archives. Full detail in `docs/AGILE.md`.
 
 ## Spec index
 
