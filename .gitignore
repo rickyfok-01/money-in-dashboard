@@ -45,3 +45,6 @@ data/data-source/data/*.zip
 # Python bytecode cache (from scripts/test_build_data.py). Never commit.
 __pycache__/
 *.pyc
+
+# jsdom smoke scratch dir (iter-02 verification harness). Not part of the app.
+.smoke/

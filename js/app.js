@@ -208,6 +208,8 @@ const TABS=[
     render:renderTheme},
   {id:"summary-v2",n:"25",title:"Summary V2",sub:"Compact 3-category overview — Contribution Bill, Payment, Direct Debit — all in one page.",modes:["current","compare","trend"],
     cap:"Summary V2",render:renderSummaryV2},
+  {id:"dd-overview",n:"26",title:"DD Overview",sub:"Direct Debit pipeline — DDI+DDA 30-day + aging KPIs, one page.",modes:["current","compare","trend"],
+    cap:"DD Overview",render:renderDDOverview},
 ];
 
 /* ============================================================
@@ -250,6 +252,7 @@ const NAV_GROUPS = [
   {key:"perf",      label:"Performance",   locked:false, ids:["ontime-performance","completion","submit-funnel-coverage"]},
   {key:"outcomes",  label:"Outcomes & ops",locked:false,ids:["payment-outcome","backlog","outliers","volume-tiers","trustee-portfolio"]},
   {key:"overtime",  label:"Over time",     locked:false, ids:["monthly-trend","snapshot-comparison"]},
+  {key:"direct-debit",label:"Direct Debit",locked:false, ids:["dd-overview"]},
   {key:"settings",  label:"Settings",      locked:true,  ids:["settings"]},
 ];
 function navGroupCollapsed(key){

@@ -784,3 +784,34 @@ table.alloc tbody td.tone-red{background:rgba(239,68,68,.07)}
   .sv-chart-row .chart-wrap{height:120px}
   .sv-comp-chart-row .chart-wrap{height:120px}
 }
+
+/* ============================================================
+   DD Overview (tab 26) — mirrors .sv-* density (Pattern B overview)
+   ============================================================ */
+.ddo-rib{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:8px}
+.ddo-kpi{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);
+  padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.ddok-lab{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;line-height:1.2}
+.ddok-val{font-family:var(--mono);font-weight:600;font-size:1.25rem;line-height:1.15;color:var(--ink)}
+.ddok-val.tone-g{color:#16a34a} .ddok-val.tone-y{color:#f59e0b} .ddok-val.tone-r{color:#ef4444}
+.ddok-mom{font-size:.7rem;font-weight:500;line-height:1}
+.ddok-mom.kpu{color:var(--good)} .ddok-mom.kpd{color:var(--crit)} .ddok-mom.kpf{color:var(--muted)}
+.ddo-chart-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+.ddo-chart-card{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:8px 10px}
+.ddo-chart-title{font-size:.62rem;font-weight:600;color:var(--ink-2);margin-bottom:4px;letter-spacing:.02em;
+  text-transform:uppercase}
+.ddo-chart-card .chart-wrap{height:150px}
+.ddo-chart-card canvas{width:100%!important;height:100%!important}
+.ddo-chart-card.ddo-empty{display:flex;flex-direction:column;justify-content:flex-start}
+.ddo-chart-card.ddo-empty .pend-empty{padding:30px 10px}
+.ddo-note{font-size:.68rem;color:var(--ink-2);background:var(--surface-2);border:1px dashed var(--rule);
+  border-radius:var(--radius-sm);padding:5px 10px;margin:0 0 8px}
+.ddo-tbl{margin-top:8px}
+@media(max-width:1100px){
+  .ddo-rib{grid-template-columns:repeat(3,1fr)}
+  .ddo-chart-row{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+  .ddo-rib{grid-template-columns:repeat(2,1fr)}
+  .ddo-chart-card .chart-wrap{height:120px}
+}
