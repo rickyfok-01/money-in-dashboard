@@ -41,3 +41,7 @@ data/data-source/data/temp/*
 data/data-source/data/log/*
 !data/data-source/data/log/.gitkeep
 data/data-source/data/*.zip
+
+# Python bytecode cache (from scripts/test_build_data.py). Never commit.
+__pycache__/
+*.pyc

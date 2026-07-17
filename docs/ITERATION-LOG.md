@@ -25,3 +25,13 @@
   the bounded read-set, and the executing superpowers skill).
 - **Handoff:** `docs/archive/iter-00-agile/handoff.md`
 - **Status:** shipped.
+
+## iter-01 — 2026-07-17 — Bill audit (L1/L2/L3 coverage + data hygiene)
+- **Goal:** confirm Bill covers L1/L2/L3; fix the `ddiAging` blank-row artifact.
+- **Shipped:** `scripts/build_data.py` (`_blank_row` guard across all 7 readers) + `scripts/test_build_data.py` (8 tests); `data.js` regenerated. **0 new tabs** — coverage complete (L1×3, L2×7, L3×13 = 23 Bill tabs).
+- **Files:** `scripts/build_data.py`, `scripts/test_build_data.py`, `data.js`.
+- **DATA:** `rows` (audit); `ddiAging` 380→298 (dropped 82 garbage rows — `data/ddi-aging-20260713.csv` is a SQL dump, not CSV).
+- **Verify:** `test_build_data` 8/8; reviewer 0 blocking; jsdom deferred (data-only, no JS changed).
+- **Follow-up:** `data/ddi-aging-20260713.csv` needs Oracle re-export (carried to iter-02 DD).
+- **Handoff:** `docs/archive/iter-01-bill-audit/handoff.md`
+- **Status:** shipped.

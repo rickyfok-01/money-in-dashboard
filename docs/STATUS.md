@@ -6,9 +6,9 @@
 > `superpowers:subagent-driven-development`.
 
 ## Current iteration
-**iter-01 — Bill audit** — pending (plan not yet written). Next free tab: **26**.
-See ROADMAP row 1 (`docs/ROADMAP.md`). Pre-flight: refresh stale `data.js`
-(CSVs are one snapshot ahead) and add `data/constant-scheme-info.xlsx` (else `DATA.names` is empty).
+**iter-02 — DD L1 (Direct Debit Overview) — pending (plan not yet written). Next free tab: 26.**
+See ROADMAP row 2 (`docs/ROADMAP.md`).
+Note: data/ddi-aging-20260713.csv is a malformed SQL dump → ddiAging has 4 snapshots (20260714–17); needs Oracle re-export (iter-02).
 
 ## Orientation
 A no-build vanilla-JS MPF dashboard: `index.html` + `js/*.js` plain `<script>` modules

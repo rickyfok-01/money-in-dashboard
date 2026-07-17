@@ -22,3 +22,4 @@ History of completed iterations. Each has a folder `iter-{NN}-{slug}/` containin
 | Iter | Date | Domain / Level | Tabs shipped | Handoff | Archived specs |
 |---|---|---|---|---|---|
 | 00 | 2026-07-17 | meta (agile system) | none | `iter-00-agile/handoff.md` | — |
+| 01 | 2026-07-17 | Bill audit (L1/L2/L3 + hygiene) | none | iter-01-bill-audit/handoff.md | — |

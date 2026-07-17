@@ -97,6 +97,18 @@ def to_float(v) -> float:
         return 0.0
 
 
+def _blank_row(r) -> bool:
+    """True when a DictReader row has no TR_CODE and no SCHEME_CODE (blank
+    source line, all-empty-comma line, or a garbled non-CSV line parsed under
+    a wrong header). Such rows are artifacts: `snap_file` backfills the
+    snapshot from the filename, so the `if not snap` guard alone does not
+    catch them and they would otherwise surface as `{tr:'',sc:'',...}` rows
+    in the output. Applied in every reader loop."""
+    tr = (r.get("TR_CODE") or "").strip()
+    sc = (r.get("SCHEME_CODE") or "").strip()
+    return not tr and not sc
+
+
 def freq_label(v: str) -> str:
     v = (v or "").strip()
     return v if v else UNSET
@@ -116,6 +128,8 @@ def read_pym():
             for r in csv.DictReader(fh):
                 snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
                 if not snap:
+                    continue
+                if _blank_row(r):
                     continue
                 row = {
                     "s": snap,
@@ -146,6 +160,8 @@ def read_ao_aging():
             for r in csv.DictReader(fh):
                 snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
                 if not snap:
+                    continue
+                if _blank_row(r):
                     continue
                 row = {
                     "s": snap,
@@ -178,6 +194,8 @@ def read_ddi():
                 snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
                 if not snap:
                     continue
+                if _blank_row(r):
+                    continue
                 row = {
                     "s": snap,
                     "tr": (r.get("TR_CODE") or "").strip(),
@@ -198,6 +216,8 @@ def read_ddi():
             for r in csv.DictReader(fh):
                 snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
                 if not snap:
+                    continue
+                if _blank_row(r):
                     continue
                 row = {
                     "s": snap,
@@ -229,6 +249,8 @@ def read_dda():
                 snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
                 if not snap:
                     continue
+                if _blank_row(r):
+                    continue
                 row = {
                     "s": snap,
                     "tr": (r.get("TR_CODE") or "").strip(),
@@ -251,6 +273,8 @@ def read_dda():
             for r in csv.DictReader(fh):
                 snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
                 if not snap:
+                    continue
+                if _blank_row(r):
                     continue
                 row = {
                     "s": snap,
@@ -325,6 +349,8 @@ def main() -> int:
                 # Authoritative snapshot: the column, falling back to filename.
                 snap = (r.get("SNAPSHOT_DATE") or snap_file or "").strip()
                 if not snap:
+                    continue
+                if _blank_row(r):
                     continue
                 ym = (r.get("YEAR_MONTH") or "").strip()
                 sc = (r.get("SCHEME_CODE") or "").strip()
