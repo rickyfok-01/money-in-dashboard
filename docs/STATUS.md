@@ -1,160 +1,60 @@
-# STATUS — current state of the contribution dashboard
+# STATUS — money-in-dashboard (current state)
 
-> **Read this first in a zero-context session.** It is the *current-state snapshot*
-> (what is done, how to resume, where the traps are). For the architecture, design
-> system, and full tab catalogue, read **`CLAUDE.md`** — this file does not repeat
-> it. Last updated 2026-07-16.
+> **Read this first.** Current-state snapshot. Last updated 2026-07-17.
+> Iteration history → `docs/ITERATION-LOG.md`. **Start an iteration** → `docs/AGILE.md`
+> (read-set §4, skill map §2); copy `docs/superpowers/plans/_template.md`; execute via
+> `superpowers:subagent-driven-development`.
 
----
+## Current iteration
+**iter-01 — Bill audit** — pending (plan not yet written). Next free tab: **26**.
+See ROADMAP row 1 (`docs/ROADMAP.md`). Pre-flight: refresh stale `data.js`
+(CSVs are one snapshot ahead) and add `data/constant-scheme-info.xlsx` (else `DATA.names` is empty).
 
-## 1. One-paragraph orientation
+## Orientation
+A no-build vanilla-JS MPF dashboard: `index.html` + `js/*.js` plain `<script>` modules
+(Chart.js 4.4.7 + D3 7 via CDN). `scripts/build_data.py` folds 7 CSV families + 1 xlsx
+into `data.js` (`const DATA`). **26 tabs** (00–25) across 3 data areas (Bill / Payment /
+Direct Debit). Scheme is the primary entity; latest 6 contribution months only.
 
-`empf-dashboard/contribution` is a **single self-contained HTML dashboard**
-(`index.html`, plain vanilla JS, no build step, Chart.js `4.4.7` + D3 `7` via CDN).
-Seven source CSV families + one xlsx are folded by `scripts/build_data.py` into
-`data.js` (`const DATA = {...}`), which `index.html` loads. There are **26 tabs**
-(00–25). The dashboards were **merged onto `index.html` on 2026-07-10**
-(`admin.html` deleted; index wins all conflicts; all admin-only features dropped).
-All work from the recent sessions is **complete and verified**.
-
-## 2. What is done & verified (2026-07-10)
-
-- **Dashboard merge** — `index.html` + `admin.html` → one `index.html`. Removed:
-  the `admin.html` link, the `#viewSwitch` Standard/Admin redirector, `docs/admin-view.md`.
-  Confirmed by `grep -c viewSwitch index.html` → `0`.
-- **Money Allocation tab (02)** — *matrix-only* (no tiles/charts). One control bar
-  above one matrix:
-  - **Left:** snapshot `<select>`(s) + `[By trustee][By scheme]` toggle (default trustee).
-  - **Right:** on-tab **`[Current][Compare]`** switch — this tab's sole mode control
-    (`TABS.modes:["current"]`; no global mode toggle exists in the chrome anyway;
-    **Trend removed**).
-  - **Current** matrix = code-only labels, no Total column, 3 sub-cols/month
-    (Pay / Avail / ALLOC%).
-  - **Compare** adds a 2nd snapshot `<select>` (A default latest−1, B default latest)
-    and widens each month group to **5** sub-cols: Pay / Avail / ALLOC% / **pre ALLOC%**
-    / **change %** (B − A, signed pp, green/red dot).
-  - Header merged: page title is "Money Allocation"; the old in-content
-    "Contribution Allocation" heading is gone.
-- **Summary (00) sections restored** after the merge dropped them — the merge had
-  also deleted the D3 `<script>` tag, which broke Summary (see gotcha §5.1). Fixed
-  and re-verified.
-- Verified end-to-end with a **jsdom smoke harness** (real d3 + Chart.js + data.js):
-  0 runtime errors in Current and Compare; switching / snapshot-change / By-toggle
-  all re-render cleanly.
-- **Summary V2 tab (25)** — compact 3-category overview page: Contribution Bill,
-  Contribution Payment, Direct Debit. Single-pane no-scroll layout with KPI
-  pills, 3 category cards, and 4 aging-bucket bars. Supports Current / Compare /
-  Trend modes. `build_data.py` extended to load DDI, DDA, and AO-aging CSVs.
-
-## 3. Run / verify
-
+## Run / verify
 ```bash
-python scripts/build_data.py   # re-generates data.js from the CSVs + xlsx (run after any CSV change)
-start index.html               # Windows: open in a browser
+python scripts/build_data.py   # regenerate data.js after any CSV/xlsx change
+start index.html               # open in browser (Windows)
 ```
+**jsdom smoke harness** (the verification method — no canvas in jsdom, so it catches
+`ReferenceError`/logic throws, not pixels):
+1. Build the app string from `index.html` body + a `<script src data.js>` block.
+2. jsdom `beforeParse(window)` — inject Chart.js + d3 via `window.eval(lib)`, then
+   `window.eval(dataJs + "\n;globalThis.DATA = DATA;")`. (**Not** inline `<script>` —
+   that throws `SyntaxError`; the eval path works. `const DATA` is eval-scoped, hence
+   the `globalThis.DATA` append in the *same* eval.)
+3. Stub `window.ResizeObserver` (no-ops); filter canvas `getContext` errors.
+4. `window.eval(appJs)`, render each target tab into a host div; assert
+   `window.onerror` / `uncaughtException` fired **0** times.
 
-**jsdom smoke test** (the established verification harness — no canvas in jsdom, so
-it catches `ReferenceError`/logic throws, not pixel output):
-1. Save `index.html` app + a `<script src data.js>` block to a string.
-2. Use jsdom `beforeParse(window)` and inject libs with `window.eval(chartJs)`,
-   `window.eval(d3Js)`, then `window.eval(dataJs + "\n;globalThis.DATA = DATA;")`.
-   **Do not** inject libs as inline `<script>` HTML — that path throws
-   `SyntaxError: missing ) after argument list`; the `beforeParse`+`eval` path works.
-3. Stub `window.ResizeObserver` (`observe/unobserve/disconnect` no-ops) and filter
-   canvas `getContext` errors (jsdom has no canvas).
-4. `window.eval(appJs)`, then call each tab's render into a host `div`; assert
-   `window.onerror`/`uncaughtException` fired 0 times.
+## Next free tab
+**26** (after 25 Summary V2). Tab numbering is strict-sequential; inserting mid-array
+requires renumbering the `TABS` tail — prefer appending.
 
-## 4. Key files (what each is, focus = recently changed)
-
+## Live files
 | File | Role |
 |---|---|
-| `index.html` | **the app** — sidebar nav + tabbed content; Chart.js + D3 via CDN; one vanilla-JS module |
-| `data.js` | generated dataset (`const DATA`); **never hand-edit** — regenerate via `scripts/build_data.py` |
-| `scripts/build_data.py` | CSVs + xlsx → `data.js`; type-coerces measures, keeps latest 6 YEAR_MONTHs; emits `DATA`, `DATA.pym`, `DATA.names` |
-| `docs/SPEC-money-allocation.md` | requirements + UX/UI spec for tab 02 (mirror of `docs/SPEC-contribution-tagging.md`) |
-| `docs/25-summary-v2.md` | spec for tab 25 — compact 3-category overview |
-| `js/tabs-summary-v2.js` | Summary V2 renderer — bill, payment, direct debit KPIs |
-| `data/con-pym-ao-aging-*.csv` | AO aging data (SQL-07) — `DATA.aoAging` |
-| `data/ddi-*.csv`, `data/dda-*.csv` | DDI/DDA data (SQL-01/02/03/04) — `DATA.ddi30`, `DATA.ddiAging`, `DATA.dda30`, `DATA.ddaAging` |
-| `CLAUDE.md` | architecture + tab catalogue + conventions (the authoritative "how to work here") |
-| `docs/` | one spec per tab + `00-architecture.md` (build plan / design system) |
-| `data/con-bill-6mon-*.csv` | bill source (Query 2 of `data/sql/contribution.sql`) |
-| `data/con-pym-6mon-*.csv` | payment source (Pay AMT / Avail AMT) → `DATA.pym` |
-| `data/constant-scheme-info.xlsx` | code→name lookup → `DATA.names` |
-| `index-old.html` | **merge backup only** (pre-merge `index.html`) — not part of the live app; safe to delete once confident |
+| `index.html` | the app — sidebar + content; Chart.js + D3 via CDN |
+| `data.js` | generated `const DATA`; **never hand-edit** |
+| `scripts/build_data.py` | CSVs + xlsx → data.js; emits `rows, pym, aoAging, ddi30, ddiAging, dda30, ddaAging, names` |
+| `js/core.js` `js/charts.js` `js/tabs-*.js` `js/app.js` | modules; load order in `AGENTS.md §Load order` |
+| `docs/AGILE.md` `docs/ROADMAP.md` | iteration system (superpowers backbone) |
+| `docs/00-architecture.md` | data model + design system (durable foundation) |
+| `CLAUDE.md` / `AGENTS.md` | how to work here + critical gotchas |
 
-## 5. Gotchas & conventions (the non-obvious traps)
+## Gotchas (compressed — full detail in `AGENTS.md §Critical gotchas`)
+- **D3 is load-bearing** — never delete its `<script>` tag (breaks Summary's SVG charts).
+- **No functional global filter toolbar** — `#fMode` is dead code; tabs read `state.*` defaults.
+- **eval scope in the smoke harness** — append `globalThis.DATA = DATA` in the same eval.
+- **`data.js` IS tracked** despite `.gitignore` line 10 (stale Vite cruft).
+- **Never `git add -A` / `git add .`** — `data/` may hold stray Vite files. Stage explicitly.
+- **Strict sequential tab numbering** (00–25); write `docs/NN-*.md` spec before implementing.
 
-### 5.1 D3 is NOT dead weight — never delete its `<script>` tag
-The 2026-07-10 merge removed the `d3@7` tag thinking it was Bill-Volume-Race-only
-(a dropped admin feature). But D3 powers the **Summary (00)** tab's hand-built SVG
-charts (`buildStatusStackedByMonth` = *Bills by status · monthly*,
-`buildStatusByMonthWithTrustee` = *Submission status by month*). Without it,
-`renderSummary` throws `d3 is not defined` mid-render and the Summary's lower
-sections vanish. The tag was restored; **CLAUDE.md warns about it.** Always
-re-verify a merge with a Summary render in the smoke harness.
-
-### 5.2 No functional global filter toolbar
-`index.html` has **no working filter bar** — `state.schemes`/`state.snap` default to
-"all"; scheme scoping is by table click-through. The `#fMode` global mode toggle is
-**dead code** (the element does not exist in the DOM). Tabs must degrade gracefully
-with defaults (mirror the Pend Tagging tab's `state.*` access). Because of this, the
-Money Allocation on-tab Current/Compare switch is cleanly the tab's sole control.
-
-### 5.3 eval/inline-script scoping in the smoke harness
-`const DATA` evaluated inside `window.eval(...)` is **eval-scoped, not global** —
-the app code can't see it. Always append `globalThis.DATA = DATA` in the *same* eval.
-
-### 5.4 Stray files — leave untouched
-`data/` historically contained stray copies from a **separate Vite project**.
-The **root `.gitignore`
-is also Vite cruft** — it still lists `data.js` as ignored (line 10), but `data.js`
-**is** tracked and committed here; treat that line as wrong, not as a signal to
-stop tracking `data.js`.
-
-### 5.5 Adding a tab
-Tabs use **strict sequential numbering** (`n` = "00"… "24"); inserting one requires
-a deterministic re-walk of the `TABS` array to renumber the tail. Add the
-`docs/NN-*.md` spec first, then build to it (overview tabs get a `docs/SPEC-*.md`
-instead). `TABS[i].modes` controls which global modes a tab offers — but since the
-global toggle is dead code (§5.2), this mostly matters for tab-internal mode logic
-like Money Allocation's.
-
-### 5.6 Data regeneration
-Re-run `python scripts/build_data.py` after **any** CSV/xlsx change. ALLOC% (tab 02) =
-`Σpay / (Σpay + Σavail)` computed as a **ratio of sums**, never a mean of per-row
-ratios; `allocTone`: ≥98 green / ≥95 yellow / else red (good-when-high, the inverse
-of the bill `tone`).
-
-## 6. Git / commit state
-
-- This **is** a git repo on `branch main` (tracking `origin/main`). Commit style is
-  terse/casual (`change`, `New`, `x`) — a personal project, not precious about hygiene.
-- **Tracked & committed:** `index.html`, `data.js`, `CLAUDE.md`, `scripts/`,
-  `docs/` (including `docs/STATUS.md`, `docs/SPEC-*.md`), root `.gitignore`.
-- **Not committed (deliberately):** the raw source CSVs/xlsx
-  (`data/con-bill-*`, `data/con-pym-*`, `data/constant-scheme-info.xlsx`,
-  `data/contribution-allocation.xlsx`) and the merge backup `index-old.html`. The
-  repo ships the built `data.js`, not the source data — matching the established
-  pattern. (Re-derive source from the CSVs by running the build script.)
-- **Never committed (Vite cruft, §5.4):** files matching `.gitignore` patterns under `data/`.
-- When committing dashboard work, **stage explicitly** (`git add -u` for tracked
-  mod/deletes, then `git add` the specific new files). **Never `git add -A`/`. `** —
-  it would pull in the stray Vite files.
-
-## 7. Possible next steps (none are blocking)
-
-- **Visual review** of the Money Allocation Compare view (open `start index.html` →
-  Overview → Money Allocation → Compare) — eyeball the 5-col month groups and the
-  `change %` tone/format.
-- **Restore Trend** for tab 02 if a time-series of ALLOC% across the 6 months is
-  wanted later (it was removed when the on-tab switch took over; re-add by widening
-  `TABS.modes` and resurrecting `renderMoneyAllocationTrend`).
-- **Surface `DATA.names`** on the bill tabs (currently only tab 02 renders names;
-  the lookup is available globally).
-- **Visual review of Summary V2** — the new compact layout renders in all three modes;
-  may need font-size or spacing tweaks once seen with real data on a 1920×1080 screen.
-- **Clean the stray `.gitignore`** (root + `data/`) of Vite cruft, and decide once
-  whether the raw source CSVs belong in the repo — both are tidy-up items, not in
-  scope of the current work.
+## Git state
+Branch `feat/loop-agile`. Commit style terse/casual (personal project). Raw CSVs/xlsx in
+`data/` are gitignored; the repo ships the built `data.js`.
