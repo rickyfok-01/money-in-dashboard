@@ -1,21 +1,21 @@
 # STATUS — money-in-dashboard (current state)
 
-> **Read this first.** Current-state snapshot. Last updated 2026-07-20.
+> **Read this first.** Current-state snapshot. Last updated 2026-07-17.
 > Iteration history → `docs/ITERATION-LOG.md`. **Start an iteration** → `docs/AGILE.md`
 > (read-set §4, skill map §2); copy `docs/superpowers/plans/_template.md`; execute via
 > `superpowers:subagent-driven-development`.
 
 ## Current iteration
-**iter-04 — DD L3 (DDI/DDA aging crosstabs + outliers) — not started. Next free tab: 29.**
-See ROADMAP row 4 (`docs/ROADMAP.md`). iter-03 (DD L2 tabs #27 DDI + #28 DDA Dimensions) shipped.
+**iter-03 — DD L2 (DDI + DDA Dimensions, parallel build) — not started. Next free tab: 27.**
+See ROADMAP row 3 (`docs/ROADMAP.md`). iter-02 (DD Overview tab #26) shipped.
 Framework-friction backlog (iter-0 patch) → `docs/FRAMEWORK-BACKLOG.md`.
 Note: `data/ddi-aging-20260713.csv` is a malformed SQL dump → `ddiAging` ships only 4 snapshots
-(20260714–17). Tabs 26/#27/#28 don't read it; iter-04 (L3, aging crosstabs) will — Oracle re-export remains open, non-blocking.
+(20260714–17). Tab 26 guards this (<2-snapshot `pend-empty`); Oracle re-export remains open, non-blocking.
 
 ## Orientation
 A no-build vanilla-JS MPF dashboard: `index.html` + `js/*.js` plain `<script>` modules
 (Chart.js 4.4.7 + D3 7 via CDN). `scripts/build_data.py` folds 7 CSV families + 1 xlsx
-into `data.js` (`const DATA`). **29 tabs** (00–28) across 3 data areas (Bill / Payment /
+into `data.js` (`const DATA`). **27 tabs** (00–26) across 3 data areas (Bill / Payment /
 Direct Debit). Scheme is the primary entity; latest 6 contribution months only.
 
 ## Run / verify
@@ -32,7 +32,7 @@ start index.html               # open in browser (Windows)
 4. `window.eval(appJs)`, render each target tab into a host div; assert 0 `onerror`/`uncaughtException`.
 
 ## Next free tab
-**29** (after 28 DDA Dimensions). Strict-sequential; inserting mid-array renumbers the
+**27** (after 26 DD Overview). Strict-sequential; inserting mid-array renumbers the
 `TABS` tail — prefer appending.
 
 ## Live files
@@ -52,7 +52,7 @@ start index.html               # open in browser (Windows)
 - **eval scope in the smoke harness** — append `globalThis.DATA = DATA` in the same eval.
 - **`data.js` IS tracked** despite `.gitignore` line 10 (stale Vite cruft).
 - **Never `git add -A` / `git add .`** — `data/` may hold stray Vite files. Stage explicitly.
-- **Strict sequential tab numbering** (00–28); write `docs/NN-*.md` spec before implementing.
+- **Strict sequential tab numbering** (00–26); write `docs/NN-*.md` spec before implementing.
 
 ## Git state
 Branch `feat/loop-agile`. Commit style terse/casual (personal project). Raw CSVs/xlsx in

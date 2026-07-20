@@ -815,3 +815,25 @@ table.alloc tbody td.tone-red{background:rgba(239,68,68,.07)}
   .ddo-rib{grid-template-columns:repeat(2,1fr)}
   .ddo-chart-card .chart-wrap{height:120px}
 }
+
+/* ── DDI Dimensions (#27) · tab-internal dimension toggle + rate-cell tone ──
+   The DDI twin ships its OWN toggle classes (ddi-dim-*) instead of reusing
+   .alloc-toggle like DDA does. These mirror .alloc-toggle (:569-573) so DDI's
+   pill reads identically to DDA's, and the rate-cell tone hexes match
+   .svc-val/.ddok-val (:725/:796) — green #16a34a / amber #f59e0b / red #ef4444 —
+   so DDI's rate cells match DDA's inline ddaToneHex colours. Integration-only:
+   no tab-module JS was edited (plan §9 sequenced step). */
+.ddi-dim-toggle{display:flex;align-items:center;gap:10px;margin:2px 2px 14px;flex-wrap:wrap}
+.ddi-dim-lab{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.ddi-dim-btn{border:1px solid var(--hairline);background:var(--surface);padding:6px 16px;font-size:.74rem;
+  font-family:var(--font);color:var(--ink-2);cursor:pointer;letter-spacing:.02em}
+.ddi-dim-btn + .ddi-dim-btn{margin-left:-1px}            /* overlap borders → one pill */
+.ddi-dim-btn:first-of-type{border-radius:999px 0 0 999px}
+.ddi-dim-btn:last-of-type{border-radius:0 999px 999px 0}
+.ddi-dim-btn.on{background:var(--c1);color:#fcfcfb;font-weight:600}
+.ddi-dim-btn:hover:not(.on){color:var(--ink);position:relative;z-index:1}
+.ddi-dim-btn:focus-visible{outline:2px solid var(--c1);outline-offset:1px}
+.ddi-dim-table{margin-top:8px}
+.ddi-dim-table td.tone-g{color:#16a34a}
+.ddi-dim-table td.tone-y{color:#f59e0b}
+.ddi-dim-table td.tone-r{color:#ef4444}

@@ -45,3 +45,33 @@
 - **Follow-up:** `data/ddi-aging-20260713.csv` Oracle re-export still open (non-blocking; tab 26 guards it via the `<2`-snapshot state).
 - **Handoff:** `docs/archive/iter-02-dd-overview/handoff.md`
 - **Status:** shipped.
+
+## iter-03 — 2026-07-20 — DD L2 (DDI + DDA Dimensions, parallel build)
+- **Goal:** the L2 "dimensions" view under the DD Overview — break the Direct Debit
+  pipeline down by scheme / trustee / account-type, exposing which dimension drives
+  DDI success rate and DDA active rate, and how those rates shift between snapshots.
+  Two Pattern-A twin tabs built in parallel (one Engineer per tab).
+- **Shipped:** `js/tabs-ddi-dimensions.js` (tab **#27** — `renderDDIDim` + Current/Compare/Trend
+  + local `ddiDimToggle`/`ddiDimAgg`; measures total/submitted/success/rejected; rate=`successRate`)
+  + `js/tabs-dda-dimensions.js` (tab **#28** — `renderDDADim` + Current/Compare/Trend + local
+  `ddaDimToggle`/`ddaDimAgg`; measures total/active/inactive/rejected/suspend; rate=`activeRate`)
+  + `docs/27-ddi-dimensions.md` + `docs/28-dda-dimensions.md` (specs); wiring in `js/app.js`
+  (TABS +2, `direct-debit` NAV_GROUPS +2 ids), `index.html` (+2 `<script>` before `app.js`),
+  `styles.css` (`ddi-dim-*` rules). **2 new tabs (#27, #28).**
+- **Files:** `js/tabs-ddi-dimensions.js`, `js/tabs-dda-dimensions.js`, `js/app.js`,
+  `index.html`, `styles.css`, `docs/27-ddi-dimensions.md`, `docs/28-dda-dimensions.md`.
+- **DATA:** `ddi30, dda30` (consumed read-only; `data.js` untouched — no CSV change this iter).
+- **Verify:** Reviewer independent jsdom smoke **0/18** (both tabs × current/compare/trend ×
+  scheme/trustee/account-type) + sign-off 0 blocking; Process Reviewer 0 blocking (4
+  framework-friction items logged → `docs/FRAMEWORK-BACKLOG.md` #5–8).
+- **Follow-up:** N3 spec-trim deferred (both specs 45–54 lines vs ~25-line contract — left
+  for an iter-07 doc pass, logged in FRAMEWORK-BACKLOG #5). `data/ddi-aging-20260713.csv`
+  Oracle re-export still open (non-blocking; affects `ddiAging`, NOT `ddi30`/`dda30`).
+- **Notes:** parallel build (one Engineer per tab; `js/app.js` + `index.html` sequenced after
+  both landed). Three non-blocking review fixes (N1/N2/N4 — color-literal/comment-only: DDI
+  `DDI_DIM_RATE_HEX`→`#16a34a/#f59e0b/#ef4444`; DDA Trend Rejected line `CAT[6]`→`#ef4444`; DDA
+  reuse comment dropped stale `groupBy`) were applied by the **lead** directly after both
+  engineer agents died on a 429 usage-limit mid-loop — Process-Reviewer-ruled an acceptable
+  mechanical exception to "lead does not write code" (framework friction #7).
+- **Handoff:** `docs/archive/iter-03-dd-l2-dimensions/handoff.md`
+- **Status:** shipped.

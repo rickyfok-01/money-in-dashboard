@@ -210,6 +210,8 @@ const TABS=[
     cap:"Summary V2",render:renderSummaryV2},
   {id:"dd-overview",n:"26",title:"DD Overview",sub:"Direct Debit pipeline — DDI+DDA 30-day + aging KPIs, one page.",modes:["current","compare","trend"],
     cap:"DD Overview",render:renderDDOverview},
+  {id:"ddi-dimensions",n:"27",title:"DDI Dimensions",sub:"DDI 30-day requests by scheme / trustee / account-type — success rate + rejected/pending mix.",modes:["current","compare","trend"],render:renderDDIDim},
+  {id:"dda-dimensions",n:"28",title:"DDA Dimensions",sub:"DDA 30-day mandates by scheme / trustee / account-type — active rate + inactive/rejected/suspend mix.",modes:["current","compare","trend"],render:renderDDADim},
 ];
 
 /* ============================================================
@@ -252,7 +254,7 @@ const NAV_GROUPS = [
   {key:"perf",      label:"Performance",   locked:false, ids:["ontime-performance","completion","submit-funnel-coverage"]},
   {key:"outcomes",  label:"Outcomes & ops",locked:false,ids:["payment-outcome","backlog","outliers","volume-tiers","trustee-portfolio"]},
   {key:"overtime",  label:"Over time",     locked:false, ids:["monthly-trend","snapshot-comparison"]},
-  {key:"direct-debit",label:"Direct Debit",locked:false, ids:["dd-overview"]},
+  {key:"direct-debit",label:"Direct Debit",locked:false, ids:["dd-overview","ddi-dimensions","dda-dimensions"]},
   {key:"settings",  label:"Settings",      locked:true,  ids:["settings"]},
 ];
 function navGroupCollapsed(key){
