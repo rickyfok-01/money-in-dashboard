@@ -5,6 +5,19 @@ dist-ssr
 *.local
 .vite
 
+# Nuxt build artifacts
+.nuxt
+.output
+.nitro
+.cache
+
+# _archive/ — the 11 MB data.js is generated (regenerable from CSVs via
+# build_data.py); exclude it from history to keep the repo small. The rest of
+# the archive (source + docs) is committed for reference.
+_archive/data.js
+# Python bytecode that drifted into the archive.
+_archive/scripts/__pycache__/
+
 # legacy data sources — replaced by public/data/*.json
 # keep them out of the repo; regenerate via `npm run data:convert`
 data.js
@@ -18,6 +31,9 @@ data/dda-*.csv
 data/ddi-*.csv
 data/constant-scheme-info.xlsx
 data/contribution-allocation.xlsx
+
+# Embedded PGlite database (regenerated from CSVs via `npm run reseed`).
+data/.pglite/
 
 # Stray files carried over from a separate Vite project — never commit. (STATUS.md §5.4)
 data/CLAUDE.md

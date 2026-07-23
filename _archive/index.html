@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money In Monitoring</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-mode="current">
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">
+        <!-- Inline SVG mark: stacked ledger rows + an upward pulse line —
+             evokes "money in" + "monitoring" without leaning on a paid icon
+             font, consistent with the rest of the typography-first design. -->
+        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <rect x="3" y="4.5" width="18" height="15" rx="1.6"/>
+          <path d="M3 9h18"/>
+          <path d="M3 14.5h18"/>
+          <path d="M7 7.25h2M7 12.25h2M7 16.75h2"/>
+          <path d="M16.5 16.5l1.7-2.4 1.7 1.5 2.1-3.6"/>
+        </svg>
+      </span>
+      <div class="brand-body">
+        <div class="brand-mark">Money In <span class="wm-snap">Monitoring</span></div>
+        <div class="brand-sub">MPF bill &amp; submit-channel</div>
+      </div>
+
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="nav-foot">
+      Data: <span class="mono">con-bill-6mon-*.csv</span><br>
+      Source: <span class="mono">data/sql/contribution.sql</span> (Q2)<br>
+      Plan & specs: <a href="docs/README.md">docs/</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="masthead">
+      <div class="masthead-left">
+        <button type="button" id="menuToggle" class="menu-toggle" aria-label="Hide menu"
+                aria-controls="sidebar" aria-pressed="false" title="Hide menu">
+          <span class="bars" aria-hidden="true">
+            <i></i><i></i><i class="bar3"></i>
+          </span>
+        </button>
+        <div>
+          <h1 id="pageTitle">Summary</h1>
+          <p class="sub" id="pageSub"></p>
+        </div>
+      </div>
+      <div class="masthead-actions">
+        <div class="brand-meta" id="brandMeta"></div>
+        <div class="mode-pill" id="modePill">Current view</div>
+      </div>
+    </header>
+
+    <!-- Global scope/filter bar — the shared controls every tab reads from:
+         snapshot, scheme, trustee, month range, and the Current/Compare/Trend
+         mode toggle. Built once in buildScopeBar(); availability is refreshed
+         per tab in updateScopeBar(). Controls that don't apply to a tab are
+         DIMMED (never removed) so the bar reads as one stable surface. -->
+    <div class="scopebar" id="scopeBar" aria-label="Dashboard scope filters"></div>
+
+    <section class="content" id="content"></section>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script src="js/core.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/tabs-summary.js"></script>
+<script src="js/tabs-detail.js"></script>
+<script src="js/tabs-settings.js"></script>
+<script src="js/tabs-alloc.js"></script>
+<script src="js/tabs-summary-v2.js"></script>
+<script src="js/tabs-dd-overview.js"></script>
+<script src="js/tabs-ddi-dimensions.js"></script>
+<script src="js/tabs-dda-dimensions.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

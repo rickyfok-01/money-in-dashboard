@@ -1,0 +1,27 @@
+{
+  "name": "money-in-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "reseed": "node scripts/reseed.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.14",
+    "chart.js": "^4.4.3",
+    "csv-parse": "^5.5.6",
+    "vue-chartjs": "^5.3.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "nuxt": "^3.14.0",
+    "tailwindcss": "^3.4.4",
+    "vue": "^3.5.0",
+    "vue-router": "^4.4.0"
+  }
+}
